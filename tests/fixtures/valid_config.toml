@@ -1,0 +1,12 @@
+[framework]
+simulation_speed = 1.5
+vsync            = true
+
+[framework.window]
+width  = 1280
+height = 720
+title  = "Test Window"
+
+[model.sph]
+particle_count = 50000
+gravity_y      = -9.81

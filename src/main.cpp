@@ -1,26 +1,29 @@
-#include <glad/gl.h>
+#include "config/ConfigReader.hpp"
+#include "rendering/ParticleSystem.cuh"
+
 #include <GLFW/glfw3.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cuda_runtime.h>
+#include <filesystem>
+#include <fstream>
+#include <glad/gl.h>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
-
-#include <cuda_runtime.h>
-
-#include "rendering/ParticleSystem.cuh"
-
-#include <cstdio>
-#include <cstdlib>
-#include <fstream>
 #include <sstream>
 #include <string>
 
-static void glfw_error_callback(int error, const char* description) {
+static void glfw_error_callback(int error, const char* description)
+{
     std::fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
-static std::string loadShaderSource(const char* filepath) {
+static std::string loadShaderSource(const char* filepath)
+{
     std::ifstream file(filepath);
-    if (!file.is_open()) {
+    if (!file.is_open())
+    {
         std::fprintf(stderr, "Failed to open shader: %s\n", filepath);
         return "";
     }
@@ -29,14 +32,16 @@ static std::string loadShaderSource(const char* filepath) {
     return buffer.str();
 }
 
-static unsigned int compileShader(unsigned int type, const char* source) {
+static unsigned int compileShader(unsigned int type, const char* source)
+{
     unsigned int shader = glCreateShader(type);
     glShaderSource(shader, 1, &source, nullptr);
     glCompileShader(shader);
 
     int success;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
+    if (!success)
+    {
         char infoLog[512];
         glGetShaderInfoLog(shader, 512, nullptr, infoLog);
         std::fprintf(stderr, "Shader compilation failed: %s\n", infoLog);
@@ -46,20 +51,25 @@ static unsigned int compileShader(unsigned int type, const char* source) {
     return shader;
 }
 
-static unsigned int createShaderProgram(const char* vertPath, const char* fragPath) {
+static unsigned int createShaderProgram(const char* vertPath, const char* fragPath)
+{
     std::string vertSource = loadShaderSource(vertPath);
     std::string fragSource = loadShaderSource(fragPath);
 
-    if (vertSource.empty() || fragSource.empty()) {
+    if (vertSource.empty() || fragSource.empty())
+    {
         return 0;
     }
 
     unsigned int vertShader = compileShader(GL_VERTEX_SHADER, vertSource.c_str());
     unsigned int fragShader = compileShader(GL_FRAGMENT_SHADER, fragSource.c_str());
 
-    if (!vertShader || !fragShader) {
-        if (vertShader) glDeleteShader(vertShader);
-        if (fragShader) glDeleteShader(fragShader);
+    if (!vertShader || !fragShader)
+    {
+        if (vertShader)
+            glDeleteShader(vertShader);
+        if (fragShader)
+            glDeleteShader(fragShader);
         return 0;
     }
 
@@ -70,7 +80,8 @@ static unsigned int createShaderProgram(const char* vertPath, const char* fragPa
 
     int success;
     glGetProgramiv(program, GL_LINK_STATUS, &success);
-    if (!success) {
+    if (!success)
+    {
         char infoLog[512];
         glGetProgramInfoLog(program, 512, nullptr, infoLog);
         std::fprintf(stderr, "Shader linking failed: %s\n", infoLog);
@@ -84,10 +95,43 @@ static unsigned int createShaderProgram(const char* vertPath, const char* fragPa
     return program;
 }
 
-int main() {
+int main([[maybe_unused]] int argc, char* argv[])
+{
+    // ------------------------------------------------------------------
+    // Load configuration (fail-fast: config.toml must exist next to binary)
+    // ------------------------------------------------------------------
+    const auto binaryDir = std::filesystem::path{argv[0]}.parent_path();
+    const auto configPath = (binaryDir / "config.toml").string();
+
+    psim::config::ConfigReader cfg{};
+    if (auto loadResult = cfg.load(configPath); !loadResult)
+    {
+        std::fprintf(stderr,
+                     "Fatal: failed to load config.toml at '%s': %s\n",
+                     configPath.c_str(),
+                     loadResult.error().message.c_str());
+        return EXIT_FAILURE;
+    }
+
+    // ------------------------------------------------------------------
+    // Read framework parameters (getOrDefault guarantees startup on partial
+    // configs while individual key errors are non-fatal).
+    // ------------------------------------------------------------------
+    const auto windowWidth = cfg.getOrDefault<int>("framework.window", "width", 1280);
+    const auto windowHeight = cfg.getOrDefault<int>("framework.window", "height", 720);
+    const auto windowTitle =
+        cfg.getOrDefault<std::string>("framework.window", "title", "Particle Simulation Framework");
+    const auto vsync = cfg.getOrDefault<bool>("framework", "vsync", true);
+    const auto particleCount = static_cast<std::uint32_t>(cfg.getOrDefault<int>("model.sph", "particle_count", 100000));
+    const auto initSpeed = cfg.getOrDefault<float>("framework", "simulation_speed", 1.0F);
+    const auto bgR = cfg.getOrDefault<float>("framework.rendering", "background_r", 0.05F);
+    const auto bgG = cfg.getOrDefault<float>("framework.rendering", "background_g", 0.05F);
+    const auto bgB = cfg.getOrDefault<float>("framework.rendering", "background_b", 0.08F);
+
     glfwSetErrorCallback(glfw_error_callback);
 
-    if (!glfwInit()) {
+    if (!glfwInit())
+    {
         std::fprintf(stderr, "Failed to initialize GLFW\n");
         return EXIT_FAILURE;
     }
@@ -97,19 +141,21 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Particle Simulation Framework", nullptr, nullptr);
-    if (!window) {
+    GLFWwindow* window = glfwCreateWindow(windowWidth, windowHeight, windowTitle.c_str(), nullptr, nullptr);
+    if (!window)
+    {
         std::fprintf(stderr, "Failed to create GLFW window\n");
         glfwTerminate();
         return EXIT_FAILURE;
     }
 
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(1); // VSync
+    glfwSwapInterval(vsync ? 1 : 0);
 
     // Load OpenGL functions
     int version = gladLoadGL(glfwGetProcAddress);
-    if (version == 0) {
+    if (version == 0)
+    {
         std::fprintf(stderr, "Failed to initialize GLAD\n");
         glfwDestroyWindow(window);
         glfwTerminate();
@@ -136,11 +182,9 @@ int main() {
     ImGui_ImplOpenGL3_Init("#version 460");
 
     // Load particle shaders
-    unsigned int particleShader = createShaderProgram(
-        "shaders/particle.vert",
-        "shaders/particle.frag"
-    );
-    if (!particleShader) {
+    unsigned int particleShader = createShaderProgram("shaders/particle.vert", "shaders/particle.frag");
+    if (!particleShader)
+    {
         std::fprintf(stderr, "Failed to create particle shader program\n");
         // Continue anyway - will just not render particles
     }
@@ -151,14 +195,15 @@ int main() {
 
     // Initialize particle system with CUDA-GL interop
     ParticleSystem particles;
-    std::uint32_t particleCount = 100000;
     bool cudaInitialized = particleSystemInit(particles, particleCount);
-    if (!cudaInitialized) {
+    if (!cudaInitialized)
+    {
         std::fprintf(stderr, "Failed to initialize particle system\n");
     }
 
     // Setup VAO with particle VBO
-    if (cudaInitialized && particles.vbo) {
+    if (cudaInitialized && particles.vbo)
+    {
         glBindVertexArray(particleVAO);
         glBindBuffer(GL_ARRAY_BUFFER, particles.vbo);
         // float4: xy = position, zw = color/alpha
@@ -175,11 +220,12 @@ int main() {
 
     // Simulation state
     bool paused = false;
-    float simulationSpeed = 1.0f;
+    float simulationSpeed = initSpeed;
     double lastTime = glfwGetTime();
 
     // Main loop
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(window))
+    {
         glfwPollEvents();
 
         double currentTime = glfwGetTime();
@@ -187,7 +233,8 @@ int main() {
         lastTime = currentTime;
 
         // Update particles
-        if (cudaInitialized && !paused) {
+        if (cudaInitialized && !paused)
+        {
             particleSystemUpdate(particles, dt * simulationSpeed);
         }
 
@@ -207,11 +254,13 @@ int main() {
         ImGui::Checkbox("Paused", &paused);
         ImGui::SliderFloat("Speed", &simulationSpeed, 0.1f, 5.0f);
 
-        if (ImGui::Button("Reset")) {
+        if (ImGui::Button("Reset"))
+        {
             particleSystemDestroy(particles);
             cudaInitialized = particleSystemInit(particles, particleCount);
 
-            if (cudaInitialized && particles.vbo) {
+            if (cudaInitialized && particles.vbo)
+            {
                 glBindVertexArray(particleVAO);
                 glBindBuffer(GL_ARRAY_BUFFER, particles.vbo);
                 glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, nullptr);
@@ -223,7 +272,8 @@ int main() {
 
         ImGui::Separator();
 
-        if (ImGui::Button("Exit")) {
+        if (ImGui::Button("Exit"))
+        {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
 
@@ -233,11 +283,12 @@ int main() {
         int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
-        glClearColor(0.05f, 0.05f, 0.08f, 1.0f);
+        glClearColor(bgR, bgG, bgB, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Draw particles
-        if (cudaInitialized && particleShader && particles.vbo) {
+        if (cudaInitialized && particleShader && particles.vbo)
+        {
             glUseProgram(particleShader);
             glBindVertexArray(particleVAO);
             glDrawArrays(GL_POINTS, 0, particles.count);
@@ -255,8 +306,10 @@ int main() {
     // Cleanup
     particleSystemDestroy(particles);
 
-    if (particleVAO) glDeleteVertexArrays(1, &particleVAO);
-    if (particleShader) glDeleteProgram(particleShader);
+    if (particleVAO)
+        glDeleteVertexArrays(1, &particleVAO);
+    if (particleShader)
+        glDeleteProgram(particleShader);
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

@@ -1,6 +1,7 @@
 #include "core/Parameter.hpp"
 
 #include <gtest/gtest.h>
+#include <string>
 #include <type_traits>
 #include <variant>
 
@@ -83,10 +84,11 @@ TEST(ParameterTest, BoolParameter_StoresValueAndName_Correctly)
 // ParameterValue concept — compile-time constraints
 // ---------------------------------------------------------------------------
 
-// Verified via static_assert: only float, int, bool satisfy ParameterValue.
+// Verified via static_assert: only float, int, bool, std::string satisfy ParameterValue.
 static_assert(ParameterValue<float>, "float must satisfy ParameterValue");
 static_assert(ParameterValue<int>, "int must satisfy ParameterValue");
 static_assert(ParameterValue<bool>, "bool must satisfy ParameterValue");
+static_assert(ParameterValue<std::string>, "std::string must satisfy ParameterValue");
 static_assert(!ParameterValue<double>, "double must NOT satisfy ParameterValue");
 static_assert(!ParameterValue<unsigned int>, "unsigned int must NOT satisfy ParameterValue");
 

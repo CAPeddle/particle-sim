@@ -32,6 +32,11 @@
 ---
 InheritParentConfig: false
 
+# Workaround: clang-18 emits __cpp_concepts=201907L but libstdc++-13 requires
+# >= 202002L to enable std::expected / std::unexpected. Override here so that
+# all C++23 library features (expected, ranges, etc.) are visible to clang-tidy.
+ExtraArgs: ['-D__cpp_concepts=202002L']
+
 Checks: >
   -*,
   bugprone-*,

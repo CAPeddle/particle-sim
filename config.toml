@@ -1,0 +1,33 @@
+# Particle Simulation Framework — configuration file
+# Located next to the built binary (copied at build time by CMake).
+
+[framework]
+simulation_speed = 1.0
+vsync            = true
+
+[framework.window]
+width  = 1280
+height = 720
+title  = "Particle Simulation Framework"
+
+[framework.rendering]
+point_size   = 3.0
+background_r = 0.05
+background_g = 0.05
+background_b = 0.08
+
+[model.sph]
+particle_count   = 100000
+gravity_x        = 0.0
+gravity_y        = -9.81
+damping          = 0.999
+influence_radius = 0.05
+rest_density     = 1000.0
+gas_constant     = 2000.0
+viscosity        = 250.0
+boundary_mode    = "reflect"
+
+[model.gameoflife]
+grid_width      = 256
+grid_height     = 256
+initial_density = 0.3

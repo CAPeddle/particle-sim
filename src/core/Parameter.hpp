@@ -1,30 +1,42 @@
 #pragma once
 
 #include <concepts>
+#include <string>
 #include <string_view>
 #include <variant>
 
 namespace psim::core
 {
 
-/// @brief Concept restricting Parameter<T> to types renderable by ImGui.
+/// @brief Concept restricting Parameter<T> to supported value types.
 ///
-/// Only float (slider/drag), int (slider/drag), and bool (checkbox) are
-/// supported. Using any other type produces a clear compile-time error.
+/// - float  → slider / drag control in ImGui.
+/// - int    → slider / drag control in ImGui.
+/// - bool   → checkbox in ImGui.
+/// - std::string → text input in ImGui; minValue / maxValue / step are
+///               structurally present but semantically unused.
+///
+/// Using any other type produces a clear compile-time error.
 template <typename T>
-concept ParameterValue = std::same_as<T, float> || std::same_as<T, int> || std::same_as<T, bool>;
+concept ParameterValue =
+    std::same_as<T, float> || std::same_as<T, int> || std::same_as<T, bool> || std::same_as<T, std::string>;
 
 /// @brief Runtime parameter with metadata for UI rendering and serialization.
 ///
-/// @tparam T Value type — must satisfy ParameterValue (float, int, or bool).
+/// @tparam T Value type — must satisfy ParameterValue (float, int, bool, or
+///           std::string).
 ///
 /// @details
 /// Models declare an array of these and return a non-owning span via
 /// ISimulationModel::parameters(). The ImGui layer iterates the span and
-/// renders each entry as an appropriate control (slider, drag, checkbox).
+/// renders each entry as an appropriate control (slider, drag, checkbox, or
+/// text input).
 ///
 /// For bool parameters, minValue, maxValue, and step are structurally present
 /// but semantically unused by the ImGui layer (it renders a checkbox instead).
+///
+/// For std::string parameters, minValue, maxValue, and step are always empty
+/// strings by convention and are ignored by the ImGui layer (text input).
 ///
 /// @pre name and description must point to storage that outlives this struct
 ///      (typically string literals).
@@ -48,6 +60,6 @@ struct Parameter
 ///
 /// @note Adding a new ParameterValue type requires extending this alias and
 ///       updating all std::visit callsites.
-using ParameterEntry = std::variant<Parameter<float>, Parameter<int>, Parameter<bool>>;
+using ParameterEntry = std::variant<Parameter<float>, Parameter<int>, Parameter<bool>, Parameter<std::string>>;
 
 } // namespace psim::core

@@ -89,11 +89,41 @@ target_link_libraries(imgui PUBLIC
 )
 
 # ============================================================================
+# toml11 (TOML config parsing)
+# ============================================================================
+FetchContent_Declare(
+    toml11
+    GIT_REPOSITORY https://github.com/ToruNiina/toml11.git
+    GIT_TAG        v4.4.0
+    GIT_SHALLOW    TRUE
+)
+set(TOML11_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
+set(TOML11_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(toml11)
+
+# ============================================================================
+# GoogleTest
+# ============================================================================
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG        v1.15.2
+    GIT_SHALLOW    TRUE
+)
+# Suppress GoogleTest's own install rules
+set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
+enable_testing()
+add_subdirectory(tests)
+
+# ============================================================================
 # Main executable
 # ============================================================================
 add_executable(particle_sim
     src/main.cpp
     src/rendering/ParticleSystem.cu
+    src/config/ConfigReader.cpp
 )
 
 target_include_directories(particle_sim PRIVATE
@@ -106,6 +136,7 @@ target_link_libraries(particle_sim PRIVATE
     glad_gl46
     imgui
     CUDA::cudart
+    toml11::toml11
 )
 
 # Compiler warnings (C/C++ only, not CUDA)
@@ -119,4 +150,12 @@ endif()
 target_compile_options(particle_sim PRIVATE
     $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
     $<$<COMPILE_LANGUAGE:CUDA>:-allow-unsupported-compiler>
+)
+
+# Copy config.toml next to the binary after each build
+add_custom_command(TARGET particle_sim POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_CURRENT_SOURCE_DIR}/config.toml
+        $<TARGET_FILE_DIR:particle_sim>/config.toml
+    COMMENT "Copying config.toml to binary directory"
 )
