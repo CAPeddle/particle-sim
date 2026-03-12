@@ -1,0 +1,97 @@
+# .clang-format — particle-sim
+#
+# Style: LLVM base with project-specific overrides.
+# Enforcement: strict from project start — all new files must pass.
+# Run: clang-format -i --style=file:.clang-format <file>
+# Verify: clang-format --dry-run --Werror --style=file:.clang-format <file>
+#
+# Onboarding: Review and adjust column limits, brace wrapping, and include
+# ordering to match your team's preferences. The settings below are a reasonable
+# starting point for a modern C++23 project.
+
+---
+Language: Cpp
+BasedOnStyle: LLVM
+
+# --- Column and line layout ---
+ColumnLimit: 120
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ContinuationIndentWidth: 4
+
+# --- Brace wrapping ---
+BreakBeforeBraces: Allman
+
+# --- Namespace indentation ---
+NamespaceIndentation: None
+CompactNamespaces: false
+FixNamespaceComments: true
+
+# --- Include ordering ---
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  # Project headers — double-quoted
+  - Regex:    '^"[^/]'
+    Priority: 1
+  # Sub-folder project headers
+  - Regex:    '^".*/'
+    Priority: 2
+  # System and third-party — angle-bracket
+  - Regex:    '^<.*>'
+    Priority: 3
+
+# --- Access modifiers ---
+AccessModifierOffset: -4
+
+# --- Constructor initializer lists ---
+ConstructorInitializerIndentWidth: 4
+BreakConstructorInitializers: BeforeColon
+PackConstructorInitializers: Never
+
+# --- Template parameters ---
+AlwaysBreakTemplateDeclarations: Yes
+SpaceAfterTemplateKeyword: true
+
+# --- Function declarations ---
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortLambdasOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakAfterReturnType: None
+BinPackArguments: false
+BinPackParameters: false
+
+# --- Alignment ---
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments:
+  Enabled: false
+AlignConsecutiveDeclarations:
+  Enabled: false
+AlignOperands: Align
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 0
+
+# --- Pointer / reference alignment ---
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+# --- Whitespace ---
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesInAngles: Never
+SpacesInContainerLiterals: false
+SpacesInSquareBrackets: false
+
+# --- Trailing commas ---
+InsertTrailingCommas: None
+
+# --- Penalty tuning (controls line-break aggressiveness) ---
+PenaltyBreakBeforeFirstCallParameter: 19
+PenaltyReturnTypeOnItsOwnLine: 120
+
+# --- C++ standard ---
+# Use Latest to enable newest language features supported by clang-format
+Standard: Latest

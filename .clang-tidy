@@ -1,0 +1,105 @@
+# .clang-tidy — particle-sim
+#
+# Philosophy: STRICT FROM PROJECT START.
+# All enabled checks are hard errors (WarningsAsErrors: '*').
+# New projects pay a low migration cost compared to retrofitting; enforce everything now.
+#
+# Strategy:
+#   - Enable broad check groups via wildcards.
+#   - Disable only checks that are proven to produce false positives for this codebase.
+#   - Suppress individual false positives inline with // NOLINT(check-name) + a comment explaining why.
+#   - Add subdirectory .clang-tidy files with InheritParentConfig: true to suppress
+#     checks in generated code, vendor code, or test files where appropriate.
+#
+# Run: clang-tidy <file> -- -std=c++23
+# Verify with compile commands: clang-tidy -p build/ <file>
+#
+# Note: CUDA .cu files have limited clang-tidy support. Focus enforcement on .cpp/.hpp files.
+#
+# Disabled checks explanation:
+#   -modernize-use-trailing-return-type       : stylistic opinion, not a quality issue
+#   -fuchsia-*                                 : Fuchsia OS conventions, not applicable
+#   -llvm-*                                    : LLVM internal conventions, not applicable
+#   -llvmlibc-*                                : LLVM libc internal, not applicable
+#   -altera-*                                  : FPGA/OpenCL, not applicable
+#   -android-*                                 : Android NDK specifics, not applicable
+#   -objc-*                                    : Objective-C specific, not applicable
+#   -linuxkernel-*                             : Linux kernel coding style, not applicable
+#   -abseil-*                                  : Abseil library specific, not applicable
+#   -boost-*                                   : Boost specific, not applicable
+#   -zircon-*                                  : Zircon OS specific, not applicable
+
+---
+InheritParentConfig: false
+
+Checks: >
+  -*,
+  bugprone-*,
+  cert-*,
+  clang-analyzer-*,
+  concurrency-*,
+  cppcoreguidelines-*,
+  hicpp-*,
+  misc-*,
+  modernize-*,
+  -modernize-use-trailing-return-type,
+  performance-*,
+  portability-*,
+  readability-*,
+  -fuchsia-*,
+  -llvm-*,
+  -llvmlibc-*,
+  -altera-*,
+  -android-*,
+  -objc-*,
+  -linuxkernel-*,
+  -abseil-*,
+  -boost-*,
+  -zircon-*
+
+# Strict mode: all enabled checks are hard errors.
+# As your team encounters genuine false positives, move them to the Checks exclusion
+# list above (with a comment) rather than weakening WarningsAsErrors.
+WarningsAsErrors: '*'
+
+# Only lint project headers — exclude generated code, vendor, and system headers.
+# Matches src/ directory files with .h, .hpp, or .cuh extensions.
+HeaderFilterRegex: '.*/src/.*\.(h|hpp|cuh)$'
+
+CheckOptions:
+  # Naming convention enforcement — matches particle-sim conventions:
+  # Classes=PascalCase, functions/methods=camelCase, members=camelCase (no prefix), constants=UPPER_CASE
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.StructCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumConstantCase
+    value: UPPER_CASE
+  - key: readability-identifier-naming.FunctionCase
+    value: camelBack
+  - key: readability-identifier-naming.MethodCase
+    value: camelBack
+  - key: readability-identifier-naming.VariableCase
+    value: camelBack
+  - key: readability-identifier-naming.ParameterCase
+    value: camelBack
+  - key: readability-identifier-naming.MemberCase
+    value: camelBack
+  - key: readability-identifier-naming.PrivateMemberCase
+    value: camelBack
+  - key: readability-identifier-naming.ConstexprVariableCase
+    value: UPPER_CASE
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: UPPER_CASE
+  - key: readability-identifier-naming.NamespaceCase
+    value: lower_case
+  # Cognitive complexity threshold — lower means simpler functions required.
+  - key: readability-function-cognitive-complexity.Threshold
+    value: '25'
+  # Magic number tolerance — 0, 1, 2 are common; expand as needed.
+  - key: readability-magic-numbers.IgnoredIntegerValues
+    value: '0;1;2;-1'
+  - key: readability-magic-numbers.IgnoredFloatingPointValues
+    value: '0.0;1.0;-1.0;0.5;2.0'

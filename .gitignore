@@ -1,0 +1,46 @@
+# Build output
+build/
+build-release/
+build-debug/
+out/
+
+# CMake generated
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+
+# Binaries
+*.exe
+*.out
+*.app
+*.so
+*.dll
+*.a
+*.lib
+
+# CUDA intermediates
+*.ptx
+*.cubin
+*.fatbin
+
+# IDE / Editor
+.vscode/settings.json
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docview
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+*.ncb
+
+# OS
+.DS_Store
+Thumbs.db
+
+# ImGui saved state
+imgui.ini
