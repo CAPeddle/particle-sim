@@ -61,6 +61,14 @@ Overlord (orchestrator)
 #### [Code Reviewer](./code-reviewer.agent.md)
 **Role:** Quality gatekeeper. Mandatory review against `copilot-instructions.md`.
 
+### Specialist Agents
+
+#### [C++ Expert](./expert-cpp.agent.md)
+**Role:** Deep C++23/CUDA 20 guidance. Core Guidelines, RAII, no-exception, sanitizer compliance, SM 89 CUDA patterns.
+
+#### [ADR Generator](./adr-generator.agent.md)
+**Role:** Creates Architecture Decision Records in `docs/adr/` with full POS/NEG/ALT/IMP structure.
+
 ---
 
 ## particle-sim Specific

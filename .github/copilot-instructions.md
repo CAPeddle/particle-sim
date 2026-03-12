@@ -377,3 +377,14 @@ Prefer agent/coding-agent mode over single-shot chat. Agents can:
 * Re-try after failures
 
 Single-shot chat cannot verify correctness — treat its output as a starting draft requiring full review.
+
+### Available Skills
+
+Skills provide step-by-step workflows for common tasks. Reference them when relevant.
+
+| Skill | Trigger phrase | Purpose |
+|-------|---------------|---------|
+| [build-and-test](./../skills/build-and-test/SKILL.md) | "build the project", "run tests" | CMake + Ninja build steps, test execution |
+| [conventional-commit](./../skills/conventional-commit/SKILL.md) | "commit", "write a commit message" | Conventional Commits 1.0.0 workflow with particle-sim scopes |
+| [create-architectural-decision-record](./../skills/create-architectural-decision-record/SKILL.md) | "create an ADR", "record this decision" | ADR document to `docs/adr/` with full template |
+| [create-technical-spike](./../skills/create-technical-spike/SKILL.md) | "create a spike", "research this" | Time-boxed research doc to `docs/spikes/` |
