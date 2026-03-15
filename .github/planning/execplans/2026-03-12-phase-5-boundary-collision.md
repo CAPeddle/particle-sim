@@ -1,7 +1,7 @@
 # ExecPlan: Phase 5 — Boundary Collision with Damping
 
 **Date:** 2026-03-12  
-**Status:** Not Started  
+**Status:** Complete  
 **Prerequisite:** [Phase 2 — TOML Config](2026-03-12-phase-2-toml-config-system.md) (reads `damping`, `boundary_mode`) and [Phase 0 — GoogleTest](2026-03-12-phase-0-googletest-integration.md) — all Progress checkboxes in both plans must be ticked before starting this plan.
 
 ---
@@ -20,17 +20,25 @@ The existing CUDA update kernel uses modulo wrap-around boundaries (particles te
 
 ## Progress
 
-- [ ] `Prerequisites verified` — [Phase 2](2026-03-12-phase-2-toml-config-system.md) shows all checkboxes ticked; `src/config/ConfigReader.hpp` and `config.toml` exist
-- [ ] `RED tests added`
-- [ ] `GREEN implementation completed`
-- [ ] `REFACTOR + validation completed`
-- [ ] `Code review — zero ERRORs`
+- [x] `Prerequisites verified` — [Phase 2](2026-03-12-phase-2-toml-config-system.md) shows all checkboxes ticked; `src/config/ConfigReader.hpp` and `config.toml` exist — 2026-03-15
+- [x] `RED tests added` — `tests/unit/core/BoundaryUtilsTest.cpp` (12 CPU tests) and `tests/gpu/core/BoundaryTest.cu` (9 GPU tests) committed — 2026-03-15
+- [x] `GREEN implementation completed` — `SimConstants.hpp`, `BoundaryUtils.cuh`, `ParticleSystem` wired; 74/74 tests pass — 2026-03-15
+- [x] `REFACTOR + validation completed` — build clean, zero new warnings, 74/74 tests pass — 2026-03-15
+- [x] `Code review — zero ERRORs` — 2026-03-15
 
 ---
 
 ## Surprises & Discoveries
 
-_Empty — fill during execution._
+**S-1: Release build disables `assert()` preconditions, breaking `UniformGridIndex` death tests.**
+
+The three `Constructor_*_Aborts` death tests in `UniformGridIndexTest` rely on `assert()` firing when invalid constructor arguments are supplied. CMake's Release configuration sets `-DNDEBUG`, which compiles out `assert()`. After this plan ran `cmake -B build -DCMAKE_BUILD_TYPE=Release`, those tests started failing. Reverting to `Debug` mode restored all 74 tests to passing.
+
+This is a pre-existing structural issue (not introduced by Phase 5). The `UniformGridIndex` precondition checks should be replaced with explicit `std::abort()` or `CudaUtils.hpp`-style Fail-Fast checks that remain active in Release builds. Tracked as a cleanup item.
+
+**S-2: `applyBoundary` declared `__host__ __device__` enables dual test coverage.**
+
+Q4 requested both CPU and GPU test coverage. Making `applyBoundary` `__host__ __device__ __forceinline__` allowed 12 direct host-side tests in `BoundaryUtilsTest.cpp` and 9 GPU-dispatched tests in `BoundaryTest.cu`, sharing identical arithmetic expectations. The CPU tests run instantly; the GPU tests confirm the device path produces bit-identical results.
 
 ---
 
@@ -46,7 +54,17 @@ _Empty — fill during execution._
 
 ## Outcomes & Retrospective
 
-_Empty — fill during execution._
+**Delivered:**
+- `src/core/SimConstants.hpp` — canonical home for `BoundaryMode`, `MAX_NEIGHBOURS`, `MAX_PARTICLES`.
+- `src/core/BoundaryUtils.cuh` — `__host__ __device__` `applyBoundary()`, fixing the fluid-sim left/top wall clamping bug.
+- `src/models/FluidSPHModel.cuh` — `DEFAULT_MAX_NEIGHBOURS` now aliases `psim::core::MAX_NEIGHBOURS` (Q3 alignment).
+- `src/rendering/ParticleSystem.cuh` — `boundaryMode` and `boundaryDamping` fields added.
+- `src/rendering/ParticleSystem.cu` — inline wrap removed from `updateParticlesKernel`; separate `applyBoundaryKernel` added (Q2).
+- `config.toml` — `boundary_damping = 0.8` added under `[model.sph]` as a separate key from `damping` (Q1).
+- 21 new tests (12 CPU, 9 GPU). Total: 74/74 passing.
+
+**Deferred:**
+- ImGui dropdown for `BoundaryMode` and damping slider (Q5) — tracked in `plan.md`.
 
 ---
 

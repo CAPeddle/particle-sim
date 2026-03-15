@@ -26,6 +26,7 @@ rest_density     = 1000.0
 gas_constant     = 2000.0
 viscosity        = 250.0
 boundary_mode    = "reflect"
+boundary_damping = 0.8
 
 [model.gameoflife]
 grid_width      = 256

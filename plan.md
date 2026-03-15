@@ -1,16 +1,91 @@
-Research doc updated — COMPARISON_RESEARCH.md now includes Section 9 with 7 transferable aspects prioritised for particle-sim:
+# particle-sim — Living Plan
 
-High: TOML config system, smoothing kernel function, density/gradient calculation
-Medium: Density heatmap visualisation, boundary collision with damping
-Low: Factory spawn patterns, vector debug drawing
+_Last updated: 2026-03-15_
 
+## Phase Status
 
-Three documents created/updated in particle-sim:
+| Phase | ExecPlan | Status |
+|-------|----------|--------|
+| Phase 0 — GoogleTest Integration | `.github/planning/execplans/2026-03-12-phase-0-googletest-integration.md` | ✅ Complete |
+| Phase 1 — ISimulationModel Interface | `.github/planning/execplans/2026-03-12-phase-1-simulation-model-interface.md` | ✅ Complete |
+| Phase 2 — TOML Config System | `.github/planning/execplans/2026-03-12-phase-2-toml-config-system.md` | ✅ Complete |
+| Phase 3 — UniformGridIndex GPU | `.github/planning/execplans/2026-03-12-phase-3-uniform-grid-index.md` | ✅ Complete |
+| Phase 4 — SPH Smoothing Kernel + Density | `.github/planning/execplans/2026-03-12-phase-4-sph-smoothing-kernel-density.md` | ✅ Complete |
+| Phase 5 — Boundary Collision with Damping | `.github/planning/execplans/2026-03-12-phase-5-boundary-collision.md` | ✅ Complete |
 
-docs/fluid-sim-migration.md — The actionable backlog. Contains 7 transferable features with original source code, known bugs (e.g., uninitialized density, pass-by-value), CUDA adaptation snippets, and a recommended implementation order. This is the primary document a future session should read.
+---
 
-docs/fluid-sim-comparison.md — The condensed architectural comparison (architecture, SOLID, patterns, performance, extensibility). Reference material for understanding why decisions were made.
+## Environment Notes
 
-CLAUDE.md — Updated "Current Status" section with a "Predecessor Project" block that points to both documents and summarises what was transferred. Any new session reading CLAUDE.md will immediately see this context.
+- **WSL2 CUDA confirmed working** (2026-03-13): RTX 4050 Laptop, SM 8.9, driver 595.79
+- **Installed CUDA toolkit: 12.0** — project documentation references 13.1 but 12.0 is installed.
+  `CMAKE_CUDA_STANDARD 20` works on 12.0. Update toolkit or docs when convenient.
 
-COMPARISON_RESEARCH.md is a direct copy and should be evaluated for removal or archiving, as its content is now integrated into the above documents. The actionable backlog in fluid-sim-migration.md should be the focus for future development sessions.
+---
+
+## Open TODOs
+
+### Deferred: ImGui boundary controls (Phase 5)
+
+> **TODO (Phase 5 Step 4, deferred):** Add an ImGui dropdown to select `BoundaryMode` at runtime
+> and a slider for `boundaryDamping`, wired to `ParticleSystem::boundaryMode` and
+> `ParticleSystem::boundaryDamping`. Deferred from Phase 5 to keep scope focused on
+> kernel + test correctness. To be implemented when the rendering loop is properly connected
+> to the SPH model.
+>
+> Track as: `feat(ui): add BoundaryMode dropdown and boundaryDamping slider in ImGui`
+
+### `assert()` preconditions require Debug build
+
+> **TODO (core hardening):** The `UniformGridIndex` constructor uses `assert()` for Fail-Fast
+> precondition checks. These are compiled out in Release builds (`-DNDEBUG`), causing
+> `Constructor_*_Aborts` death tests to fail. Replace with explicit `if (...) std::abort()`
+> guards (or a project-wide `PSIM_ASSERT` macro) that remain active regardless of build type.
+>
+> Track as: `fix(spatial): replace assert() preconditions with always-on Fail-Fast checks in UniformGridIndex`
+
+### Profiling Phase — `QueryResult::maxCountObserved`
+
+> **TODO (Profiling Phase):** `QueryResult::maxCountObserved` is currently returned as `0` (placeholder).
+> Computing the true maximum requires either an atomic-max into device memory or a
+> post-query device-to-host reduction pass — both add a sync cost.
+> Defer to a dedicated profiling step: measure whether the cost warrants it vs.
+> sizing `maxPerParticle` conservatively and relying on `truncated`.
+>
+> Track as: `perf(spatial): implement maxCountObserved via device reduction in UniformGridIndex`
+
+### `cudaDeviceSynchronize` coupling in `launchComputeDensityKernel`
+
+> **TODO (Phase 6+ / performance pass):** `detail::launchComputeDensityKernel` in `FluidSPHModel.cu`
+> ends with `CUDA_CHECK(cudaDeviceSynchronize())`, which forces a full CPU–GPU sync after every
+> density pass. This caps frame rate once the rendering loop is active. Replace with a CUDA
+> stream-based approach that pipelines density computation with rendering when profiling shows
+> it is a bottleneck.
+>
+> Track as: `perf(models): pipeline computeDensityKernel with CUDA streams, remove global sync`
+
+### Non-virtual `queryNeighboursDirect` on `UniformGridIndex` (long-term vtable fix)
+
+> **TODO (spatial cleanup):** The qualified-id workaround in `FluidSPHModelOps.cpp` bypasses
+> the vtable to avoid the nvcc/g++ mismatch (see ADR-001 Known Limitations). The preferred
+> fix is to add a non-virtual `queryNeighboursDirect` method to `UniformGridIndex` that returns
+> a plain POD result and carries no `#ifndef __CUDACC__` guard. This eliminates the qualified-id
+> dependency and is safer for any future consumers.
+>
+> Track as: `refactor(spatial): add queryNeighboursDirect to UniformGridIndex to replace vtable workaround`
+
+### Backlog (from fluid-sim predecessor)
+
+See `docs/fluid-sim-migration.md` for the prioritised migration backlog (7 features).
+Primary candidates: SPH smoothing kernel, density/gradient calculation, boundary collision.
+
+---
+
+## Design Decisions Made in Phase 3
+
+| # | Decision |
+|---|----------|
+| 1 | `ISpatialIndex` query methods return `std::expected<QueryResult, SpatialIndexError>` — Fail-Fast modernisation |
+| 2 | Separate `particle_sim_gpu_tests` executable so GPU/CPU tests are independently runnable |
+| 3 | `queryFromPoints()` fully implemented (not stubbed) |
+| 4 | `maxCountObserved` returns `0` until a profiling phase adds a device reduction (see TODO above) |

@@ -2,6 +2,7 @@
 #include <glad/gl.h>
 
 #include "ParticleSystem.cuh"
+#include "core/BoundaryUtils.cuh"
 
 #include <cstdio>
 #include <cmath>
@@ -46,12 +47,6 @@ __global__ void updateParticlesKernel(
     pos.x += vel.x * dt;
     pos.y += vel.y * dt;
 
-    // Boundary wrap-around
-    if (pos.x > 1.0f) pos.x -= 2.0f;
-    if (pos.x < -1.0f) pos.x += 2.0f;
-    if (pos.y > 1.0f) pos.y -= 2.0f;
-    if (pos.y < -1.0f) pos.y += 2.0f;
-
     // Add some swirl based on position
     float angle = atan2f(pos.y, pos.x);
     float dist = sqrtf(pos.x * pos.x + pos.y * pos.y);
@@ -69,6 +64,33 @@ __global__ void updateParticlesKernel(
     float speed = sqrtf(vel.x * vel.x + vel.y * vel.y);
     pos.z = 0.2f + speed * 2.0f;  // Blue channel
     pos.w = 1.0f;                  // Alpha
+
+    positions[idx] = pos;
+    velocities[idx] = vel;
+}
+
+// Kernel: Apply domain boundary conditions (separate pass after physics update).
+// Supports Reflect (bounce with damping) and Wrap (teleport to opposite edge).
+__global__ void applyBoundaryKernel(
+    float4* positions,
+    float2* velocities,
+    std::uint32_t count,
+    float minX, float maxX,
+    float minY, float maxY,
+    psim::core::BoundaryMode mode,
+    float damping
+) {
+    unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= count) return;
+
+    float4 pos = positions[idx];
+    float2 vel = velocities[idx];
+
+    psim::core::applyBoundary(
+        pos.x, pos.y, vel.x, vel.y,
+        minX, maxX, minY, maxY,
+        mode, damping
+    );
 
     positions[idx] = pos;
     velocities[idx] = vel;
@@ -202,6 +224,17 @@ void particleSystemUpdate(ParticleSystem& ps, float dt) {
         ps.count,
         ps.time,
         dt
+    );
+
+    // Separate boundary pass — mode and damping configurable at runtime
+    applyBoundaryKernel<<<numBlocks, blockSize>>>(
+        d_positions,
+        ps.d_velocities,
+        ps.count,
+        -1.0f, 1.0f,  // domain X bounds
+        -1.0f, 1.0f,  // domain Y bounds
+        ps.boundaryMode,
+        ps.boundaryDamping
     );
 
     CUDA_CHECK_VOID(cudaDeviceSynchronize());
