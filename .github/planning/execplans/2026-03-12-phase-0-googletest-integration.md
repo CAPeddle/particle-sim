@@ -1,7 +1,7 @@
 # ExecPlan: Phase 0 — GoogleTest Integration
 
 **Date:** 2026-03-12  
-**Status:** In Progress  
+**Status:** Completed  
 **Scope:** Add GoogleTest + GoogleMock to CMake; create test runner target; write first smoke test to verify the harness works.
 
 ---

@@ -16,7 +16,7 @@ A **particle simulation framework** (not a single simulation) that supports runt
 | Component | Technology |
 |-----------|------------|
 | Language | C++23 |
-| GPU Compute | CUDA 13.1 |
+| GPU Compute | CUDA 13.2 |
 | Rendering | OpenGL (via GLAD) |
 | Windowing | GLFW |
 | UI | Dear ImGui |

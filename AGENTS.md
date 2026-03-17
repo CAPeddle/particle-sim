@@ -38,6 +38,15 @@ The session exit is non-zero if either tool reports a violation.
 
 Fix all violations before closing the session. Do not suppress checks inline without a code comment explaining why.
 
+## Scratch Files
+
+When a task requires throwaway compilation tests, prototype snippets, or one-off validation harnesses, write them to **`build/_tmp/`** (relative to the repo root) instead of `/tmp`.
+
+- `build/` is already gitignored — scratch files stay out of git and out of the workspace root.
+- The directory is inside the workspace, so no sandbox write-permission prompt is required.
+- Create the directory if it does not exist: `mkdir -p build/_tmp`
+- **Clean up after the ExecPlan is complete.** The final step of every ExecPlan that used scratch files must run `rm -rf build/_tmp` and record that in `Progress`.
+
 ## CUDA-Specific Notes
 
 - **clang-format** runs on `.cu` files — CUDA source can be formatted

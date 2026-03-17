@@ -1,6 +1,6 @@
 # particle-sim — Living Plan
 
-_Last updated: 2026-03-15_
+_Last updated: 2026-03-16_
 
 ## Phase Status
 
@@ -12,6 +12,9 @@ _Last updated: 2026-03-15_
 | Phase 3 — UniformGridIndex GPU | `.github/planning/execplans/2026-03-12-phase-3-uniform-grid-index.md` | ✅ Complete |
 | Phase 4 — SPH Smoothing Kernel + Density | `.github/planning/execplans/2026-03-12-phase-4-sph-smoothing-kernel-density.md` | ✅ Complete |
 | Phase 5 — Boundary Collision with Damping | `.github/planning/execplans/2026-03-12-phase-5-boundary-collision.md` | ✅ Complete |
+| Phase 6 — Density Heatmap Visualisation | `.github/planning/execplans/2026-03-12-phase-6-density-heatmap.md` | ✅ Complete |
+| Phase 6a — Post-Review Remediation | `.github/planning/execplans/2026-03-16-phase-6a-review-remediation.md` | ✅ Complete |
+| Phase 6b — GpuScalarFieldInput + W-18 Close | `.github/planning/execplans/2026-03-16-phase-6b-gpu-scalar-field-input.md` | ✅ Complete |
 
 ---
 
@@ -73,6 +76,49 @@ _Last updated: 2026-03-15_
 > dependency and is safer for any future consumers.
 >
 > Track as: `refactor(spatial): add queryNeighboursDirect to UniformGridIndex to replace vtable workaround`
+
+### ~~Deferred: `DensityHeatmapInput` view struct~~ — **Closed by Phase 6b**
+
+> Closed by [Phase 6b ExecPlan](.github/planning/execplans/2026-03-16-phase-6b-gpu-scalar-field-input.md).
+> `GpuScalarFieldInput` introduced in `src/rendering/GpuScalarFieldInput.cuh` and
+> `updateDensityHeatmap` now consumes that view type instead of `FluidSPHModel`.
+
+### Deferred: `GpuScalarField` — Generic GPU Field Visualisation System (Phase 7+ — CONFIRMED)
+
+> **TODO (Rendering generalisation — Option B confirmed):** `DensityHeatmap` hard-codes the
+> density field and owns its CUDA-GL interop pipeline. A generic `GpuScalarField` type is
+> confirmed for Phase 7+ to support simultaneous overlays (e.g., density + pressure
+> side-by-side comparison).
+>
+> **Design decisions (from spike 2026-03-16):**
+> - `GpuScalarField` owns one pipeline instance (texture + CUDA resource + VAO/VBO + accumBuffer).
+> - Active fields stored as `std::vector<GpuScalarField>` in `Application` / rendering layer.
+> - Public API: `renderScalarField(const GpuScalarFieldInput&)` — input struct carries
+>   `posX`, `posY`, `scalarValues`, `particleCount`, `domainMin`, `domainMax`, plus
+>   `overrideRange` flag with `minValue`/`maxValue` (Option C normalisation).
+> - When `overrideRange == false`: auto-compute min/max via device reduction (one D→H sync).
+> - `u_colourMap` uniform deferred — add only when a signed scalar field is introduced.
+> - Non-copyable, non-movable (`= delete`); Rule of Five via RAII. ADR required before implementation.
+>
+> **Trigger:** addition of `pressure[]` or any second per-particle scalar buffer in `FluidSPHModel`.
+>
+> **Spike:** `docs/spikes/arch-gpu-scalar-field-visualization-spike.md` (✅ Complete — Option B confirmed; Stage 2 design finalised)
+>
+> Track as: `feat(rendering): introduce GpuScalarField generic GPU field visualisation system`
+
+### Deferred: Signed scalar field support (`u_colourMap` diverging colour map)
+
+> **TODO (Rendering — signed fields):** The current `heatmap.frag` hard-codes a sequential
+> blue→red ramp that silently clips negative values to blue, making them visually
+> indistinguishable from zero. Signed fields (vorticity curl-z, divergence magnitude) require
+> a diverging colour map (blue ↔ red through white/black centre).
+>
+> **Deferred until:** a signed scalar field buffer is added to `FluidSPHModel` (vorticity,
+> divergence). At that point, add `uniform int u_colourMap` to `heatmap.frag`
+> (0 = sequential, 1 = diverging) and a corresponding `colourMap` field in `GpuScalarFieldInput`.
+> Do not add speculatively — no signed field exists today.
+>
+> Track as: `feat(rendering): add u_colourMap diverging colour ramp for signed scalar fields`
 
 ### Backlog (from fluid-sim predecessor)
 

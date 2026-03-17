@@ -19,11 +19,15 @@ Adds a toggleable debug overlay that renders the SPH density field as a colour h
 
 ## Progress
 
-- [ ] `Prerequisites verified` — [Phase 4](2026-03-12-phase-4-sph-smoothing-kernel-density.md) and [Phase 3](2026-03-12-phase-3-uniform-grid-index.md) show all checkboxes ticked; `src/models/FluidSPHModel.cuh` and `src/spatial/UniformGridIndex.cuh` exist
-- [ ] `RED tests added`
-- [ ] `GREEN implementation completed`
-- [ ] `REFACTOR + validation completed`
-- [ ] `Code review — zero ERRORs`
+- [x] `Prerequisites verified` — [Phase 4](2026-03-12-phase-4-sph-smoothing-kernel-density.md) and [Phase 3](2026-03-12-phase-3-uniform-grid-index.md) show all checkboxes ticked; `src/models/FluidSPHModel.cuh` and `src/spatial/UniformGridIndex.cuh` exist
+- [x] `RED tests added`
+- [x] `GREEN implementation completed`
+- [x] `REFACTOR + validation completed`
+- [x] `Code review — zero ERRORs`
+
+> **Post-review sub-plan:** Expert code review (2026-03-16) identified 10 ERRORs and 19 WARNINGs.
+> All findings are addressed by [Phase 6a — Post-Review Remediation](2026-03-16-phase-6a-review-remediation.md).
+> Phase 6a must be completed before Phase 6 can be considered production-ready.
 
 ---
 

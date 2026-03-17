@@ -27,6 +27,7 @@ Explain what users or the system gains after this change and how to observe it w
 - [ ] (YYYY-MM-DD HH:MM UTC) GREEN implementation completed — all RED tests now pass.
 - [ ] (YYYY-MM-DD HH:MM UTC) REFACTOR + validation completed.
 - [ ] (YYYY-MM-DD HH:MM UTC) Code review — `code-reviewer` agent (or human) sign-off, zero ERRORs.
+- [ ] (YYYY-MM-DD HH:MM UTC) Scratch files removed — `rm -rf build/_tmp` *(skip if no scratch files were created)*.
 
 ---
 
@@ -143,6 +144,7 @@ Recovery if a step fails:
 
 - Branch: `feature/<short-slug>`
 - Refs: PS-XXXX
+- Scratch files (if any): `build/_tmp/` — this directory is gitignored; remove on plan completion with `rm -rf build/_tmp`.
 
 ---
 

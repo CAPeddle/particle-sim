@@ -121,3 +121,22 @@ which can extend to x/y/z. Revisit if 3D model is added.
 - Particle counts exceed 50K and memory becomes constraint → evaluate spatial hash
 - Profiling shows >15% frame time in spatial index → optimise or change approach
 - Model needs periodic boundary conditions → extend interface for domain wrapping
+
+## Known Limitations
+
+### nvcc/g++ vtable mismatch for `#ifndef __CUDACC__`-guarded virtual methods
+
+**Symptom:** SIGSEGV at a virtual dispatch site when a g++-compiled translation unit calls a virtual method on a `UniformGridIndex&` reference, where that method is declared `virtual` in the base class but guarded by `#ifndef __CUDACC__` in the interface header.
+
+**Root cause:** nvcc compiles `UniformGridIndex.cu` with `__CUDACC__` defined. The virtual methods inside `#ifndef __CUDACC__` guards (`queryNeighbours`, `queryFromPoints`) are invisible to nvcc, so the vtable it emits has no slots for them. Any g++-compiled TU that calls these methods through a vtable pointer — including a concrete `UniformGridIndex&` reference the compiler cannot devirtualise — reads a wrong or absent slot and crashes.
+
+**Current workaround (Phase 4):** Use qualified-id syntax at the call site to suppress virtual dispatch:
+```cpp
+// Direct call — bypasses vtable, avoids the missing-slot crash.
+auto result = index.psim::spatial::UniformGridIndex::queryNeighbours(output, queryParams);
+```
+This requires the caller to depend on the concrete type (`UniformGridIndex`) rather than the abstract interface (`ISpatialIndex`). That is acceptable here because `FluidSPHModelOps.cpp` already takes a `const UniformGridIndex&` — the TU-split pattern requires it.
+
+**Preferred long-term fix:** Add a non-virtual `queryNeighboursDirect` method to `UniformGridIndex` outside all `#ifndef __CUDACC__` guards, returning a plain POD result. The `.cpp` consumer calls this directly; no vtable involvement, no qualified-id dependency. Tracked in `plan.md`.
+
+**See also:** `src/spatial/ISpatialIndex.hpp` — compilation contract note in class Doxygen; `src/models/FluidSPHModelOps.cpp` — workaround usage with inline explanation.

@@ -98,6 +98,11 @@ At completion, update `Outcomes & Retrospective` with:
 - **Reusable findings** — research conclusions worth preserving in `.github/planning/investigations/`
 - **New anti-patterns** — failure modes, wrong approaches, or gotchas to document as warnings
 
+If the plan used scratch files in `build/_tmp/`, the final `Progress` entry must record their removal:
+```bash
+rm -rf build/_tmp
+```
+
 ---
 
 ## Task Sizing

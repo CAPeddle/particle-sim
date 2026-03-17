@@ -10,7 +10,7 @@ These rules define particle-sim's architecture, coding style, and quality expect
 > * **Language:** C++23 + CUDA 20
 > * **Build:** CMake 3.28 + Ninja
 > * **Packages:** FetchContent (GLFW, GLAD, ImGui)
-> * **GPU:** CUDA 13.1, CUDA-OpenGL interop
+> * **GPU:** CUDA 13.2, CUDA-OpenGL interop
 > * **Formatting:** clang-format (LLVM-based), see `.clang-format`
 > * **Linting:** clang-tidy — strict, all warnings as errors, see `.clang-tidy`
 > * **Testing:** GoogleTest + GoogleMock (TDD / Triple-A) — to be integrated
@@ -24,7 +24,7 @@ These rules define particle-sim's architecture, coding style, and quality expect
 
 1. **Platform & Tooling**
    * Must build with CMake 3.28+ + Ninja.
-   * Primary development: WSL Linux with CUDA 13.1.
+   * Primary development: WSL Linux with CUDA 13.2.
    * Windows native builds supported via MSVC 2022+.
    * Target GPU: NVIDIA RTX 4050 Laptop (SM 89 / Ada Lovelace).
 
@@ -76,7 +76,7 @@ These rules define particle-sim's architecture, coding style, and quality expect
 |------|-----------------|
 | **Language** | C++23 (CPU), CUDA 20 (GPU) |
 | **Platform** | Linux/WSL (primary), Windows |
-| **GPU** | NVIDIA CUDA 13.1, RTX 4050 (SM 89) |
+| **GPU** | NVIDIA CUDA 13.2, RTX 4050 (SM 89) |
 | **Build System** | CMake ≥ 3.28 + Ninja |
 | **Package Manager** | FetchContent |
 | **Graphics** | OpenGL 4.6 (via GLAD), CUDA-GL interop |
@@ -262,7 +262,7 @@ TEST_F(UniformGridIndexTest, Rebuild_ValidPositions_BuildsWithoutError)
 
 ### Build Instructions
 
-**Prerequisites:** CMake 3.28+, Ninja, CUDA Toolkit 13.1, GCC 13+ or Clang 18+ (Linux), MSVC 2022+ (Windows).
+**Prerequisites:** CMake 3.28+, Ninja, CUDA Toolkit 13.2, GCC 13+ or Clang 18+ (Linux), MSVC 2022+ (Windows).
 
 **Step 1 — Configure:**
 ```bash

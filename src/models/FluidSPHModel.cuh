@@ -141,6 +141,13 @@ void computeDensity(FluidSPHModel& model, const psim::spatial::UniformGridIndex&
 ///       for explicit, ordered teardown in performance-sensitive paths.
 void destroyFluidModel(FluidSPHModel& model);
 
+/// @brief Seeds particle positions randomly within the domain for demo/Phase-6 integration.
+///
+/// @deprecated To be removed when Phase 7 provides a proper spawn system.
+///
+/// @param model  Initialised FluidSPHModel with valid device buffers.
+void initSphDemoParticles(FluidSPHModel& model);
+
 // ---------------------------------------------------------------------------
 // Internal bridge — called by FluidSPHModelOps.cpp, implemented in FluidSPHModel.cu
 // ---------------------------------------------------------------------------

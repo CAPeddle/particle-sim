@@ -42,5 +42,8 @@ compile_commands.json
 .DS_Store
 Thumbs.db
 
+# Large binary installers (CUDA .deb packages etc.)
+*.deb
+
 # ImGui saved state
 imgui.ini
