@@ -66,7 +66,7 @@ clean Windows build with all tests passing and `particle_sim.exe` launching.
 
 - [ ] `Prerequisites verified` — nvcc, clang-cl, CMake, Ninja confirmed on Windows; repo cloned
 - [x] `cmake fix + .gitattributes committed` — sm_52 probe fix and line-ending policy in main
-- [ ] `Sanitizer CMake option implemented` — `ENABLE_SANITIZERS` works for clang-cl + GCC/Clang
+- [x] `Sanitizer CMake option implemented` — `ENABLE_SANITIZERS` works for clang-cl + GCC/Clang
 - [ ] `Windows build verified` — all tests pass, `particle_sim.exe` launches
 - [ ] `Docs updated` — DEVELOPMENT.md, build-and-test SKILL.md, copilot-instructions.md
 - [ ] `Code review — zero ERRORs` — code-reviewer agent sign-off

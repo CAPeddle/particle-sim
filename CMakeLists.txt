@@ -126,6 +126,49 @@ FetchContent_Declare(
 set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
+# ============================================================================
+# Sanitizers
+# ============================================================================
+# Enable with: cmake -DENABLE_SANITIZERS=ON
+# Applies ASan + UBSan to CXX compilation only.  CUDA device code is never
+# instrumented (CUDA and sanitizers are incompatible at the device level).
+# Generator expression $<$<COMPILE_LANGUAGE:CXX>:...> guards all flags so
+# they never reach nvcc.
+option(ENABLE_SANITIZERS "Enable ASan + UBSan for CPU code (not CUDA device code)" OFF)
+
+if(ENABLE_SANITIZERS)
+    if(MSVC AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        # clang-cl on Windows: ASan + most UBSan checks.
+        # -fno-sanitize=vptr: vptr requires consistent RTTI linkage across
+        # all TUs including CUDA-linked objects; excluded until that is audited.
+        set(SANITIZER_COMPILE_FLAGS
+            -fsanitize=address,undefined
+            -fsanitize-recover=all
+            -fno-omit-frame-pointer
+            -fno-sanitize=vptr
+        )
+        set(SANITIZER_LINK_FLAGS
+            -fsanitize=address,undefined
+        )
+    elseif(NOT MSVC AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        # GCC / native Clang on Linux.
+        set(SANITIZER_COMPILE_FLAGS
+            -fsanitize=address,undefined
+            -fsanitize-recover=all
+            -fno-omit-frame-pointer
+        )
+        set(SANITIZER_LINK_FLAGS
+            -fsanitize=address,undefined
+        )
+    else()
+        message(WARNING
+            "ENABLE_SANITIZERS=ON but no sanitizer flags are known for "
+            "compiler '${CMAKE_CXX_COMPILER_ID}'. Sanitizers will not be applied.")
+        # Force the option off so downstream if(ENABLE_SANITIZERS) blocks skip.
+        set(ENABLE_SANITIZERS OFF CACHE BOOL "" FORCE)
+    endif()
+endif()
+
 enable_testing()
 add_subdirectory(tests)
 
@@ -168,6 +211,14 @@ target_compile_options(particle_sim PRIVATE
     $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
     $<$<COMPILE_LANGUAGE:CUDA>:-allow-unsupported-compiler>
 )
+
+# Sanitizer flags (CXX only — device code is never instrumented)
+if(ENABLE_SANITIZERS)
+    target_compile_options(particle_sim PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:${SANITIZER_COMPILE_FLAGS}>
+    )
+    target_link_options(particle_sim PRIVATE ${SANITIZER_LINK_FLAGS})
+endif()
 
 # Copy config.toml next to the binary after each build
 add_custom_command(TARGET particle_sim POST_BUILD
