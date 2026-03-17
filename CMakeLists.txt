@@ -1,18 +1,30 @@
-cmake_minimum_required(VERSION 3.28)
+# CMake 3.29+ is required: earlier versions hardcode sm_52 in the CUDA
+# compiler-ID probe, which CUDA 13.2 removed from ptxas.  3.29.0 was the
+# first release to honour CMAKE_CUDA_ARCHITECTURES during the probe.
+cmake_minimum_required(VERSION 3.29)
 
 # Allow unsupported compiler for CUDA (VS 2026 not yet officially supported)
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -allow-unsupported-compiler")
 
+# RTX 4050 Laptop = Ada Lovelace = SM 89
+# Must be set BEFORE project() so CMake 3.29+'s CUDA compiler-ID probe uses
+# this architecture instead of any baseline default.
+set(CMAKE_CUDA_ARCHITECTURES 89)
+
 project(particle_sim LANGUAGES C CXX CUDA)
 
 # C++ and CUDA standards
+# CMAKE_CXX_STANDARD 23 enables full C++23 for all .cpp TUs (g++ / clang++).
+# CMAKE_CUDA_STANDARD 20 is the maximum nvcc 13.2 accepts via --std; device code
+# is therefore C++20.  To enable C++23 host features (std::expected, std::string_view
+# etc.) inside .cu TUs, we additionally pass -Xcompiler=-std=c++23 which overrides
+# the host-compiler invocation that nvcc generates from its own --std=c++20.
+# Because GCC uses the last -std flag on the command line, c++23 wins for host code.
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
-
-# RTX 4050 Laptop = Ada Lovelace = SM 89
-set(CMAKE_CUDA_ARCHITECTURES 89)
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-std=c++23")
 
 # Export compile commands for IDE support
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -123,7 +135,12 @@ add_subdirectory(tests)
 add_executable(particle_sim
     src/main.cpp
     src/rendering/ParticleSystem.cu
+    src/rendering/DensityHeatmap.cu
     src/config/ConfigReader.cpp
+    src/spatial/UniformGridIndex.cu
+    src/spatial/UniformGridIndexQueries.cpp
+    src/models/FluidSPHModel.cu
+    src/models/FluidSPHModelOps.cpp
 )
 
 target_include_directories(particle_sim PRIVATE
@@ -158,4 +175,12 @@ add_custom_command(TARGET particle_sim POST_BUILD
         ${CMAKE_CURRENT_SOURCE_DIR}/config.toml
         $<TARGET_FILE_DIR:particle_sim>/config.toml
     COMMENT "Copying config.toml to binary directory"
+)
+
+# Copy shaders directory next to the binary after each build
+add_custom_command(TARGET particle_sim POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/shaders
+        $<TARGET_FILE_DIR:particle_sim>/shaders
+    COMMENT "Copying shaders to binary directory"
 )

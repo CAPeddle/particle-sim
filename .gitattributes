@@ -1,0 +1,29 @@
+# Normalise line endings to LF in the repository; check out with native endings.
+* text=auto
+
+# Force LF for all source and config files on all platforms.
+# nvcc on Windows is sensitive to CRLF in .cu/.cuh files.
+*.cpp     text eol=lf
+*.hpp     text eol=lf
+*.cu      text eol=lf
+*.cuh     text eol=lf
+*.cmake   text eol=lf
+*.md      text eol=lf
+*.sh      text eol=lf
+*.toml    text eol=lf
+*.vert    text eol=lf
+*.frag    text eol=lf
+*.json    text eol=lf
+*.txt     text eol=lf
+*.py      text eol=lf
+
+# Binary files — no line-ending normalisation.
+*.png     binary
+*.jpg     binary
+*.ico     binary
+*.pdf     binary
+*.dll     binary
+*.lib     binary
+*.a       binary
+*.so      binary
+*.exe     binary
