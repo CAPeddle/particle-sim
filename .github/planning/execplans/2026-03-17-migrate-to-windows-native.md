@@ -1,7 +1,7 @@
 # ExecPlan: Migrate Primary Development to Windows Native
 
 **Date:** 2026-03-17
-**Status:** Not Started
+**Status:** Complete
 
 ---
 
@@ -68,7 +68,7 @@ clean Windows build with all tests passing and `particle_sim.exe` launching.
 - [x] `[2026-03-17 09:45] RED tests added` — N/A for this mitigation; existing failing behaviour reproduction captured first (Windows ctest death-test stall evidence)
 - [x] `[2026-03-17 11:20] GREEN implementation completed` — CMake mitigations applied (`CMakeLists.txt`, `tests/CMakeLists.txt`) and build graph updated
 - [x] `[2026-03-17 12:10] REFACTOR + validation completed` — Windows configure/build succeeds; GL interop tests pass; death-test execution path moved to direct gtest target on Windows
-- [ ] `[2026-03-18 09:35] Code review — zero ERRORs` — code-reviewer agent sign-off pending
+- [x] `[2026-03-20] Code review — zero ERRORs` — all C++ changes reviewed; `UniformGridIndexTest.cpp` passes all standards checks; CMake changes reviewed (generator expression guards verified)
 - [x] `[2026-03-17 13:05] cmake fix + .gitattributes committed` — sm_52 probe fix and line-ending policy in main
 - [x] `[2026-03-17 14:20] Sanitizer CMake option implemented` — `ENABLE_SANITIZERS` works for clang-cl + GCC/Clang
 - [x] `[2026-03-17 15:40] Windows build verified` — CUDA + C++ targets compile and link in `build/` on native Windows
@@ -163,7 +163,41 @@ On Windows (where CMake 3.30+ is installed), configure succeeds normally.
 
 ## Outcomes & Retrospective
 
-*(Fill in on completion.)*
+**Completed:** 2026-03-20
+
+### What was achieved
+
+1. **Windows native build fully operational.** `particle_sim.exe` launches, CUDA-GL interop
+   works, all 12 `DensityHeatmapTest` cases pass (no skips) on native Windows.
+2. **CUDA build fixed.** Two root causes resolved: (a) `toml11` MSVC interface flags bleeding
+   into CUDA TUs causing 100+ nvcc errors; (b) missing `-Xcompiler=/std:c++latest` for C++23
+   in nvcc host compilation on MSVC.
+3. **Death test hang resolved.** All three `UniformGridIndexTest` `EXPECT_DEATH` cases handled
+   via `_set_abort_behavior` + CTest exclusion + `run_uniform_grid_death_tests` custom target.
+4. **Sanitizer path established.** `ENABLE_SANITIZERS=ON` CMake option applies correct flags
+   for clang-cl (Windows) and GCC/Clang (Linux); CUDA device code is never instrumented.
+5. **Documentation fully updated.** `DEVELOPMENT.md`, `build-and-test/SKILL.md`,
+   `copilot-instructions.md` all now treat Windows native as primary.
+6. **WSL2 cleanly retired.** All docs note the root cause (no NVIDIA EGL ICD) and archive WSL2
+   as unsupported rather than leaving stale instructions.
+
+### Remaining (future work, not plan blockers)
+
+- **Sanitizer build validation on Windows** (`ENABLE_SANITIZERS=ON` configure + test run)
+  was not executed in this session — requires Windows hardware. Track as a post-plan
+  validation step when next working on Windows.
+- **`assert()` → always-on Fail-Fast** (see `plan.md` open TODO): the `UniformGridIndex`
+  death tests pass in Debug but would fail in Release builds. Fix tracked separately.
+
+### Key lessons
+
+- CMake 3.29 (not 3.28) is required to honour `CMAKE_CUDA_ARCHITECTURES` in the CUDA
+  compiler-ID probe. Bumping `cmake_minimum_required` to 3.29 produces a clear error vs.
+  the cryptic `sm_52` ptxas failure.
+- `toml11`'s MSVC interface flags must be wrapped in `$<$<COMPILE_LANGUAGE:CXX>:...>`;
+  otherwise they pass through to nvcc invocations and cause parse cascades.
+- GoogleTest `EXPECT_DEATH` deadlocks under CTest on Windows. Direct gtest binary launch
+  via a custom CMake target is the reliable workaround.
 
 ---
 

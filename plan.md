@@ -15,7 +15,7 @@ _Last updated: 2026-03-20_
 | Phase 6 — Density Heatmap Visualisation | `.github/planning/execplans/2026-03-12-phase-6-density-heatmap.md` | ✅ Complete |
 | Phase 6a — Post-Review Remediation | `.github/planning/execplans/2026-03-16-phase-6a-review-remediation.md` | ✅ Complete |
 | Phase 6b — GpuScalarFieldInput + W-18 Close | `.github/planning/execplans/2026-03-16-phase-6b-gpu-scalar-field-input.md` | ✅ Complete |
-| **Migrate to Windows Native** | `.github/planning/execplans/2026-03-17-migrate-to-windows-native.md` | 🟡 Docs + review pending |
+| **Migrate to Windows Native** | `.github/planning/execplans/2026-03-17-migrate-to-windows-native.md` | ✅ Complete |
 
 ---
 
