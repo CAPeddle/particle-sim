@@ -24,7 +24,11 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-std=c++23")
+if(MSVC)
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=/std:c++latest")
+else()
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-std=c++23")
+endif()
 
 # Export compile commands for IDE support
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -112,6 +116,21 @@ FetchContent_Declare(
 set(TOML11_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
 set(TOML11_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(toml11)
+
+if(MSVC AND TARGET toml11)
+    get_target_property(toml11InterfaceOptions toml11 INTERFACE_COMPILE_OPTIONS)
+    if(toml11InterfaceOptions)
+        set(filteredToml11InterfaceOptions "")
+        foreach(option IN LISTS toml11InterfaceOptions)
+            if(option STREQUAL "/utf-8" OR option STREQUAL "/Zc:preprocessor" OR option STREQUAL "/experimental:preprocessor")
+                list(APPEND filteredToml11InterfaceOptions "$<$<COMPILE_LANGUAGE:CXX>:${option}>")
+            else()
+                list(APPEND filteredToml11InterfaceOptions "${option}")
+            endif()
+        endforeach()
+        set_property(TARGET toml11 PROPERTY INTERFACE_COMPILE_OPTIONS "${filteredToml11InterfaceOptions}")
+    endif()
+endif()
 
 # ============================================================================
 # GoogleTest
@@ -203,7 +222,7 @@ target_link_libraries(particle_sim PRIVATE
 if(MSVC)
     target_compile_options(particle_sim PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/W4>)
 else()
-    target_compile_options(particle_sim PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wall -Wextra -Wpedantic>)
+    target_compile_options(particle_sim PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wall -Wextra -Wpedantic -Wshadow -Wconversion>)
 endif()
 
 # CUDA-specific flags

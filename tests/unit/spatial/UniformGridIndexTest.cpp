@@ -1,6 +1,9 @@
 #include "spatial/UniformGridIndex.cuh"
 
 #include <gtest/gtest.h>
+#if defined(_WIN32) && defined(_MSC_VER)
+#include <cstdlib>
+#endif
 
 // ---------------------------------------------------------------------------
 // Test fixture
@@ -21,6 +24,16 @@ protected:
     static constexpr float2 DOMAIN_MAX{10.0F, 10.0F};
 };
 
+namespace
+{
+void configureWindowsDeathTestAbortBehavior()
+{
+#if defined(_WIN32) && defined(_MSC_VER)
+    _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
+#endif
+}
+}
+
 // ---------------------------------------------------------------------------
 // Construction tests
 // ---------------------------------------------------------------------------
@@ -38,18 +51,33 @@ TEST_F(UniformGridIndexTest, Constructor_ValidParams_CreatesEmptyIndex)
 TEST_F(UniformGridIndexTest, Constructor_ZeroCellSize_Aborts)
 {
     // Fail-Fast: cell size of 0 is invalid
-    EXPECT_DEATH((psim::spatial::UniformGridIndex{0.0F, DOMAIN_MIN, DOMAIN_MAX}), ".*");
+    EXPECT_DEATH(
+        {
+            configureWindowsDeathTestAbortBehavior();
+            (void)psim::spatial::UniformGridIndex(0.0F, DOMAIN_MIN, DOMAIN_MAX);
+        },
+        ".*");
 }
 
 TEST_F(UniformGridIndexTest, Constructor_NegativeCellSize_Aborts)
 {
-    EXPECT_DEATH((psim::spatial::UniformGridIndex{-1.0F, DOMAIN_MIN, DOMAIN_MAX}), ".*");
+    EXPECT_DEATH(
+        {
+            configureWindowsDeathTestAbortBehavior();
+            (void)psim::spatial::UniformGridIndex(-1.0F, DOMAIN_MIN, DOMAIN_MAX);
+        },
+        ".*");
 }
 
 TEST_F(UniformGridIndexTest, Constructor_InvertedDomain_Aborts)
 {
     // domainMin.x > domainMax.x is invalid
-    EXPECT_DEATH((psim::spatial::UniformGridIndex{CELL_SIZE, DOMAIN_MAX, DOMAIN_MIN}), ".*");
+    EXPECT_DEATH(
+        {
+            configureWindowsDeathTestAbortBehavior();
+            (void)psim::spatial::UniformGridIndex(CELL_SIZE, DOMAIN_MAX, DOMAIN_MIN);
+        },
+        ".*");
 }
 
 // ---------------------------------------------------------------------------

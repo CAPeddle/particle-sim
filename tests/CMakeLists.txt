@@ -1,3 +1,6 @@
+# ==============================================================================
+# CPU unit tests (no GPU code)
+# ==============================================================================
 add_executable(
     particle_sim_tests
     unit/SmokeTest.cpp
@@ -13,9 +16,11 @@ add_executable(
 
 target_link_libraries(particle_sim_tests PRIVATE gtest_main gmock toml11::toml11 CUDA::cudart_static)
 
+# Keep linker language as CXX while allowing CUDA object files in the executable.
+# This prevents nvcc from being forced on all files.
 set_target_properties(
     particle_sim_tests
-    PROPERTIES CUDA_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CUDA
+    PROPERTIES CUDA_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CXX
 )
 
 target_include_directories(particle_sim_tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
@@ -25,19 +30,52 @@ target_compile_definitions(
     PRIVATE FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures"
 )
 
+# Compiler warnings (C/C++ only, not CUDA)
+if(MSVC)
+    target_compile_options(particle_sim_tests PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/W4>)
+else()
+    target_compile_options(particle_sim_tests PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wall -Wextra -Wpedantic -Wshadow -Wconversion>)
+endif()
+
+# CUDA-specific flags
 target_compile_options(
     particle_sim_tests
     PRIVATE
-        $<$<COMPILE_LANGUAGE:CXX>:-Wall -Wextra -Wpedantic -Wshadow -Wconversion>
         $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
         $<$<COMPILE_LANGUAGE:CUDA>:-allow-unsupported-compiler>
 )
 
 include(GoogleTest)
-gtest_discover_tests(particle_sim_tests)
+if(WIN32)
+    # On Windows, all three EXPECT_DEATH tests in UniformGridIndexTest can hang
+    # under ctest/gtest_discover_tests process orchestration. Keep them out of
+    # default ctest discovery to avoid blocking the full suite.
+    gtest_discover_tests(
+        particle_sim_tests
+        DISCOVERY_MODE PRE_TEST
+        TEST_FILTER
+            "-UniformGridIndexTest.Constructor_ZeroCellSize_Aborts:UniformGridIndexTest.Constructor_NegativeCellSize_Aborts:UniformGridIndexTest.Constructor_InvertedDomain_Aborts"
+    )
+
+    # Manual workaround target for all excluded death tests.
+    # Execute directly via gtest binary rather than through ctest.
+    add_custom_target(
+        run_uniform_grid_death_tests
+        COMMAND
+            $<TARGET_FILE:particle_sim_tests>
+            --gtest_filter=UniformGridIndexTest.Constructor_ZeroCellSize_Aborts:UniformGridIndexTest.Constructor_NegativeCellSize_Aborts:UniformGridIndexTest.Constructor_InvertedDomain_Aborts
+            --gtest_color=yes
+        DEPENDS particle_sim_tests
+        WORKING_DIRECTORY $<TARGET_FILE_DIR:particle_sim_tests>
+        USES_TERMINAL
+        COMMENT "Running all excluded Windows death tests directly (no ctest)"
+    )
+else()
+    gtest_discover_tests(particle_sim_tests)
+endif()
 
 # ==============================================================================
-# GPU integration tests (separate executable -- requires a CUDA device)
+# GPU integration tests (separate executable -- requires a CUDA device  )
 # ==============================================================================
 
 add_executable(
@@ -56,7 +94,7 @@ add_executable(
 
 set_target_properties(
     particle_sim_gpu_tests
-    PROPERTIES CUDA_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CUDA
+    PROPERTIES CUDA_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CXX
 )
 
 target_link_libraries(
@@ -74,10 +112,17 @@ target_compile_definitions(
     PRIVATE SHADER_DIR="${CMAKE_SOURCE_DIR}/shaders"
 )
 
+# Compiler warnings (C/C++ only, not CUDA)
+if(MSVC)
+    target_compile_options(particle_sim_gpu_tests PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/W4>)
+else()
+    target_compile_options(particle_sim_gpu_tests PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wall -Wextra -Wpedantic -Wshadow -Wconversion>)
+endif()
+
+# CUDA-specific flags
 target_compile_options(
     particle_sim_gpu_tests
     PRIVATE
-        $<$<COMPILE_LANGUAGE:CXX>:-Wall -Wextra -Wpedantic -Wshadow -Wconversion>
         $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
         $<$<COMPILE_LANGUAGE:CUDA>:-allow-unsupported-compiler>
 )

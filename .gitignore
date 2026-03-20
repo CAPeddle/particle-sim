@@ -45,5 +45,13 @@ Thumbs.db
 # Large binary installers (CUDA .deb packages etc.)
 *.deb
 
+# Windows throwaway build scripts (scratch; not committed)
+*.bat
+*.ps1
+
+# IDE / tool caches
+.cache/
+build_qg/
+
 # ImGui saved state
 imgui.ini

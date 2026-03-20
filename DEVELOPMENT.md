@@ -186,6 +186,28 @@ cd build
 ctest --output-on-failure
 ```
 
+### Windows note: death-test workaround
+
+On Windows, all three `UniformGridIndexTest` constructor death tests may hang when run through
+`ctest`. They are excluded from default Windows CTest discovery and must be run manually.
+
+Excluded tests:
+- `UniformGridIndexTest.Constructor_ZeroCellSize_Aborts`
+- `UniformGridIndexTest.Constructor_NegativeCellSize_Aborts`
+- `UniformGridIndexTest.Constructor_InvertedDomain_Aborts`
+
+Default suite (Windows):
+
+```bash
+ctest --test-dir build --output-on-failure
+```
+
+Manual death-test workaround target (Windows — runs all three):
+
+```bash
+cmake --build build --target run_uniform_grid_death_tests
+```
+
 Run specific test:
 
 ```bash
