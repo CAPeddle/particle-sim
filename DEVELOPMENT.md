@@ -1,64 +1,53 @@
 # Development Setup Guide
 
-This guide covers setting up the particle-sim development environment for WSL Linux and Windows native builds.
+This guide covers setting up the particle-sim development environment.
+
+> **Primary platform: Windows native (MSVC 2022 + LLVM clang-cl + CUDA 13.2)**
+>
+> WSL2 is **not supported** for this project. CUDA-GL interop requires a native NVIDIA OpenGL
+> context; WSL2 exposes only the CUDA compute path (Mesa/Zink, no NVIDIA EGL ICD).
+> See [WSL2 limitation note](#wsl2-unsupported) at the bottom of this document.
 
 ## Quick Start
 
-### WSL Linux (Primary Development Environment)
+### Windows Native (Primary Development Environment)
 
 **Prerequisites:**
-- WSL 2 with Ubuntu 22.04 LTS or later
-- CUDA Toolkit 13.2
-- CMake 3.28+
-- Ninja build system
-- GCC 13+ or Clang 18+
 
-**Setup Steps:**
+| Tool | Minimum | Install |  
+|---|---|---|
+| Windows | 11 Pro | — |
+| NVIDIA driver | 595.x | [NVIDIA Driver Downloads](https://www.nvidia.com/drivers) |
+| CUDA Toolkit | 13.2 | [CUDA Archive](https://developer.nvidia.com/cuda-toolkit-archive) |
+| Visual Studio | 2022 (any edition) | Required for MSVC headers/libs |
+| LLVM / clang-cl | 18+ | `winget install LLVM.LLVM` |
+| CMake | **3.29+** | `winget install Kitware.CMake` |
+| Ninja | any | `winget install Ninja-build.Ninja` |
+| Git | any | `winget install Git.Git` |
 
-```bash
-# 1. Install CUDA 13.2 (see CUDA 13.2 Installation section below)
+**Setup Steps (PowerShell, run from repo root):**
 
-# 2. Verify CUDA installation
-nvcc --version
-
-# 3. Install CMake 3.28+ and Ninja
-sudo apt update && sudo apt install -y cmake ninja-build build-essential
-
-# 4. Clone and configure
-git clone https://github.com/CAPeddle/particle-sim.git
+```powershell
+# 1. Clone
+git clone git@github.com-personal:CAPeddle/particle-sim.git
 cd particle-sim
-mkdir -p build
-cd build
 
-# 5. Configure with CMake
-cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
+# 2. Open a Visual Studio Developer command prompt for the MSVC environment
+#    then configure (clang-cl as the nvcc host compiler)
+cmd /c "call `"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat`" x64 && \
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CUDA_HOST_COMPILER=clang-cl"
 
-# 6. Build
-cmake --build .
+# 3. Build
+cmake --build build --parallel
 
-# 7. Run tests
-ctest
+# 4. Run tests (see Windows death-test note below)
+ctest --test-dir build --output-on-failure
 
-# 8. Run the application
-./particle_sim
-```
+# 5. Run death tests manually (excluded from ctest on Windows)
+cmake --build build --target run_uniform_grid_death_tests
 
-### Windows Native
-
-**Prerequisites:**
-- Windows 11 Pro or later
-- CUDA Toolkit 13.2 (Windows native installer)
-- Visual Studio 2022 Community Edition or Professional
-- CMake 3.28+ (installer or Scoop/Chocolatey)
-- Ninja build system
-
-**Setup Steps:**
-
-Same as WSL but use Visual Studio as the generator:
-
-```bash
-cmake -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release ..
-cmake --build . --config Release
+# 6. Launch
+.\build\particle_sim.exe
 ```
 
 ---
@@ -124,15 +113,32 @@ Then reload:
 source ~/.bashrc
 ```
 
-### Windows Native Installation
+### Windows Native Installation (Primary)
 
-1. Download the CUDA 13.2 installer from [NVIDIA CUDA Toolkit Downloads](https://developer.nvidia.com/cuda-toolkit-archive)
-2. Run the installer and follow on-screen prompts
-3. Select "Custom Installation" and ensure CUDA Compiler is checked
-4. Verify installation:
-   ```cmd
+1. Download the CUDA 13.2 Windows installer from [NVIDIA CUDA Toolkit Archive](https://developer.nvidia.com/cuda-toolkit-archive)
+2. Run the `.exe` installer; select **Custom Installation**, ensure **CUDA Compiler** and **CUDA Runtime** are checked
+3. Verify:
+   ```powershell
    nvcc --version
+   # Expected: Cuda compilation tools, release 13.2, V13.2.51
    ```
+
+### WSL2 / Linux Installation (unsupported — reference only)
+
+WSL2 is not a supported build target. CUDA compute works but `glfwCreateWindow` always
+returns `nullptr` because the NVIDIA OpenGL EGL ICD is absent. Do not attempt to run
+`particle_sim` in WSL2.
+
+If you need a Linux reference for CI purposes, the WSL2 CUDA install used historically is:
+
+```bash
+wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-wsl-ubuntu.pin
+sudo mv cuda-wsl-ubuntu.pin /etc/apt/preferences.d/cuda-repository-pin-600
+wget https://developer.download.nvidia.com/compute/cuda/13.2.0/local_installers/cuda-repo-wsl-ubuntu-13-2-local_13.2.0-1_amd64.deb
+sudo dpkg -i cuda-repo-wsl-ubuntu-13-2-local_13.2.0-1_amd64.deb
+sudo cp /var/cuda-repo-wsl-ubuntu-13-2-local/cuda-*-keyring.gpg /usr/share/keyrings/
+sudo apt-get update && sudo apt-get -y install cuda-toolkit-13-2
+```
 
 ---
 
@@ -153,17 +159,19 @@ source ~/.bashrc
 
 ### CMake Build Options
 
-Configure with:
+**Windows (primary):**
+```powershell
+# Standard Debug build (run inside VS Developer shell or after vcvarsall.bat)
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CUDA_HOST_COMPILER=clang-cl
 
-```bash
-cmake -G Ninja \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_CXX_COMPILER=g++-13 \
-  ..
+# Release build
+cmake -B build-release -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CUDA_HOST_COMPILER=clang-cl
 ```
 
 **Key CMake Variables:**
-- `CMAKE_BUILD_TYPE`: `Debug` or `Release` (default: Release)
+- `CMAKE_BUILD_TYPE`: `Debug`, `RelWithDebInfo`, or `Release`
+- `CMAKE_CUDA_HOST_COMPILER`: Set to `clang-cl` on Windows (nvcc host C++23 support)
+- `ENABLE_SANITIZERS`: `ON` to enable ASan + UBSan on CPU code (see Sanitizer Builds below)
 - `CMAKE_CXX_STANDARD`: Fixed to C++23
 - `CMAKE_CUDA_STANDARD`: Fixed to CUDA 20
 - `CMAKE_CUDA_ARCHITECTURES`: Fixed to SM 89 (RTX 4050)
@@ -174,16 +182,18 @@ cmake -G Ninja \
 
 ### Building
 
-```bash
-cd build
-cmake --build . -- -v  # Verbose output
+```powershell
+# Standard
+cmake --build build --parallel
+
+# Verbose output
+cmake --build build --parallel -- -v
 ```
 
 ### Running Tests
 
-```bash
-cd build
-ctest --output-on-failure
+```powershell
+ctest --test-dir build --output-on-failure
 ```
 
 ### Windows note: death-test workaround
@@ -251,52 +261,81 @@ gdb ./build/particle_sim
 valgrind --leak-check=full ./build/particle_sim
 ```
 
-**With AddressSanitizer:**
+**With AddressSanitizer + UBSan (Windows — clang-cl):**
 
-```bash
-cmake -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer" ..
-cmake --build .
-./build/particle_sim
+```powershell
+# Configure with ENABLE_SANITIZERS option (handles clang-cl flags automatically)
+cmake -B build_asan -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo `
+      -DCMAKE_CUDA_HOST_COMPILER=clang-cl `
+      -DCMAKE_CXX_COMPILER=clang-cl `
+      -DENABLE_SANITIZERS=ON
+cmake --build build_asan --parallel
+ctest --test-dir build_asan --output-on-failure
 ```
+
+> **Note:** Ensure `%LLVM%\bin` is in `PATH` so `clang_rt.asan_dynamic-x86_64.dll` is
+> found at runtime. Set `ASAN_SYMBOLIZER_PATH` for symbol resolution.
 
 ---
 
 ## Troubleshooting
 
-### CUDA not found by CMake
+### CUDA not found by CMake (Windows)
 
-Make sure CUDA is in your PATH:
+Ensure `nvcc` is in `PATH`:
 
-```bash
-which nvcc
+```powershell
+nvcc --version
+# If not found: add C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.2\bin to PATH
 ```
 
-If not, add to `~/.bashrc`:
+### clang-cl not found
 
-```bash
-export PATH=/usr/local/cuda-13.2/bin:$PATH
-export LD_LIBRARY_PATH=/usr/local/cuda-13.2/lib64:$LD_LIBRARY_PATH
-```
-
-### clang-format / clang-tidy not found
-
-```bash
-sudo apt install clang-format clang-tools
+```powershell
+winget install LLVM.LLVM
+# Then add C:\Program Files\LLVM\bin to PATH
+clang-cl --version
 ```
 
 ### CMake version too old
 
-```bash
-wget https://cmake.org/files/v3.28/cmake-3.28.3-linux-x86_64.tar.gz
-tar -xvf cmake-3.28.3-linux-x86_64.tar.gz
-sudo mv cmake-3.28.3-linux-x86_64 /opt/cmake-3.28
-export PATH=/opt/cmake-3.28/bin:$PATH
+This project requires CMake **3.29+** (older versions fail the CUDA compiler-ID probe with
+`ptxas fatal: sm_52 not defined`).
+
+```powershell
+winget install Kitware.CMake
+cmake --version
 ```
 
-### Build failures on Windows
+### MSVC environment not active
 
-Ensure Visual Studio 2022 is installed with C++ development tools:
-- Visual Studio Installer → Modify → Desktop development with C++
+nvcc requires MSVC headers/libs to be in the environment. Run configure inside a Visual
+Studio Developer shell or call `vcvarsall.bat x64` before `cmake`:
+
+```powershell
+cmd /c "call `"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat`" x64 && cmake -B build -G Ninja -DCMAKE_CUDA_HOST_COMPILER=clang-cl"
+```
+
+### OpenGL / GLFW window fails to create
+
+1. `nvidia-smi` — confirms the NVIDIA driver is loaded
+2. Running over RDP? The GPU may fall back to Microsoft Basic Display Adapter. Run locally
+   or enable hardware GPU acceleration in RDP session settings.
+3. Confirm OpenGL 4.6 Core support with `wglinfo`.
+
+---
+
+## WSL2 (Unsupported) {#wsl2-unsupported}
+
+WSL2 **cannot** run `particle_sim`. Root cause: the NVIDIA OpenGL EGL ICD
+(`libEGL_nvidia.so`) is absent in the WSL2 GLVND registry — only `libEGL_mesa.so`
+(Zink / Vulkan-backed) is registered. `glfwCreateWindow` always returns `nullptr`.
+
+CUDA compute works in WSL2, but CUDA-GL interop (`cudaGraphicsGLRegisterImage`) requires
+both the GL context and the CUDA context to be on the same physical device via the NVIDIA
+native driver. This is not possible in WSL2.
+
+**Do not file bug reports for WSL2 GL failures.** Use Windows native.
 
 ---
 

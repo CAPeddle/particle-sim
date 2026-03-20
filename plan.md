@@ -1,6 +1,6 @@
 # particle-sim — Living Plan
 
-_Last updated: 2026-03-16_
+_Last updated: 2026-03-20_
 
 ## Phase Status
 
@@ -15,14 +15,15 @@ _Last updated: 2026-03-16_
 | Phase 6 — Density Heatmap Visualisation | `.github/planning/execplans/2026-03-12-phase-6-density-heatmap.md` | ✅ Complete |
 | Phase 6a — Post-Review Remediation | `.github/planning/execplans/2026-03-16-phase-6a-review-remediation.md` | ✅ Complete |
 | Phase 6b — GpuScalarFieldInput + W-18 Close | `.github/planning/execplans/2026-03-16-phase-6b-gpu-scalar-field-input.md` | ✅ Complete |
+| **Migrate to Windows Native** | `.github/planning/execplans/2026-03-17-migrate-to-windows-native.md` | 🟡 Docs + review pending |
 
 ---
 
 ## Environment Notes
 
-- **WSL2 CUDA confirmed working** (2026-03-13): RTX 4050 Laptop, SM 8.9, driver 595.79
-- **Installed CUDA toolkit: 12.0** — project documentation references 13.1 but 12.0 is installed.
-  `CMAKE_CUDA_STANDARD 20` works on 12.0. Update toolkit or docs when convenient.
+- **Windows native (primary)** (from 2026-03-17): RTX 4050 Laptop, SM 8.9, driver 595.79, CUDA 13.2
+- **WSL2: not supported** — `glfwCreateWindow` always fails (no NVIDIA EGL ICD). CUDA compute works but GL interop does not.
+- **CUDA Toolkit: 13.2** confirmed on Windows native.
 
 ---
 

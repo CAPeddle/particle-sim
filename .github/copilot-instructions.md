@@ -8,14 +8,14 @@ These rules define particle-sim's architecture, coding style, and quality expect
 > **High-level summary**
 >
 > * **Language:** C++23 + CUDA 20
-> * **Build:** CMake 3.28 + Ninja
+> * **Build:** CMake **3.29** + Ninja
 > * **Packages:** FetchContent (GLFW, GLAD, ImGui)
 > * **GPU:** CUDA 13.2, CUDA-OpenGL interop
 > * **Formatting:** clang-format (LLVM-based), see `.clang-format`
 > * **Linting:** clang-tidy — strict, all warnings as errors, see `.clang-tidy`
-> * **Testing:** GoogleTest + GoogleMock (TDD / Triple-A) — to be integrated
-> * **Sanitizers:** ASan / UBSan (TSan for CPU code)
-> * **Targets:** Linux (WSL primary), Windows native
+> * **Testing:** GoogleTest + GoogleMock
+> * **Sanitizers:** ASan / UBSan via `ENABLE_SANITIZERS` CMake option
+> * **Targets:** Windows native (primary); WSL2/Linux unsupported (no NVIDIA GL ICD)
 > * **Quality:** SOLID / KISS / Fail-Fast / RAII patterns
 
 ---
@@ -23,9 +23,9 @@ These rules define particle-sim's architecture, coding style, and quality expect
 ## Priority Guidelines
 
 1. **Platform & Tooling**
-   * Must build with CMake 3.28+ + Ninja.
-   * Primary development: WSL Linux with CUDA 13.2.
-   * Windows native builds supported via MSVC 2022+.
+   * Must build with CMake **3.29+** + Ninja.
+   * Primary development: **Windows native** with CUDA 13.2 and LLVM clang-cl 18+.
+   * WSL2/Linux: **not supported** — CUDA-GL interop requires native NVIDIA GL; WSL2 has no NVIDIA EGL ICD.
    * Target GPU: NVIDIA RTX 4050 Laptop (SM 89 / Ada Lovelace).
 
 2. **Language Standards**
@@ -75,7 +75,7 @@ These rules define particle-sim's architecture, coding style, and quality expect
 | Area | Tooling / Policy |
 |------|-----------------|
 | **Language** | C++23 (CPU), CUDA 20 (GPU) |
-| **Platform** | Linux/WSL (primary), Windows |
+| **Platform** | Windows native (primary); WSL2/Linux unsupported (CUDA-GL interop requires native NVIDIA GL) |
 | **GPU** | NVIDIA CUDA 13.2, RTX 4050 (SM 89) |
 | **Build System** | CMake ≥ 3.28 + Ninja |
 | **Package Manager** | FetchContent |
@@ -262,21 +262,29 @@ TEST_F(UniformGridIndexTest, Rebuild_ValidPositions_BuildsWithoutError)
 
 ### Build Instructions
 
-**Prerequisites:** CMake 3.28+, Ninja, CUDA Toolkit 13.2, GCC 13+ or Clang 18+ (Linux), MSVC 2022+ (Windows).
+**Prerequisites:** CMake 3.29+, Ninja, CUDA Toolkit 13.2, LLVM clang-cl 18+ (Windows primary), Visual Studio 2022+ (for MSVC headers/libs on Windows).
 
-**Step 1 — Configure:**
-```bash
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+**Step 1 — Configure (inside VS Developer shell):**
+```powershell
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CUDA_HOST_COMPILER=clang-cl
 ```
 
 **Step 2 — Build:**
-```bash
-cmake --build build
+```powershell
+cmake --build build --parallel
 ```
 
 **Step 3 — Run:**
-```bash
-./build/particle_sim
+```powershell
+.\build\particle_sim.exe
+```
+
+**Step 4 — Sanitizer build:**
+```powershell
+cmake -B build_asan -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo `
+      -DCMAKE_CUDA_HOST_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl `
+      -DENABLE_SANITIZERS=ON
+cmake --build build_asan --parallel
 ```
 
 ### Adding New Source Files

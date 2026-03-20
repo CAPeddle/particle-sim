@@ -73,8 +73,8 @@ clean Windows build with all tests passing and `particle_sim.exe` launching.
 - [x] `[2026-03-17 14:20] Sanitizer CMake option implemented` — `ENABLE_SANITIZERS` works for clang-cl + GCC/Clang
 - [x] `[2026-03-17 15:40] Windows build verified` — CUDA + C++ targets compile and link in `build/` on native Windows
 - [x] `[2026-03-20] Death test hang fixed` — All 3 `UniformGridIndex` death tests excluded from CTest; `run_uniform_grid_death_tests` custom target covers all three
-- [ ] `[2026-03-18 10:00] Docs updated` — DEVELOPMENT.md, build-and-test SKILL.md, copilot-instructions.md
-- [ ] `[2026-03-18 10:05] plan.md updated` — known items closed
+- [x] `[2026-03-20] Docs updated` — DEVELOPMENT.md (full Windows-primary rewrite), build-and-test SKILL.md (Windows commands + ENABLE_SANITIZERS + clang-cl), copilot-instructions.md (Platform table + Build Instructions + CMake 3.29)
+- [x] `[2026-03-20] plan.md updated` — Windows migration added to phase table; environment notes updated; WSL2 archived
 
 ---
 
