@@ -47,9 +47,9 @@ target_compile_options(
 
 include(GoogleTest)
 if(WIN32)
-    # On Windows, all three EXPECT_DEATH tests in UniformGridIndexTest can hang
-    # under ctest/gtest_discover_tests process orchestration. Keep them out of
-    # default ctest discovery to avoid blocking the full suite.
+    # On Windows, all three UniformGridIndexTest EXPECT_DEATH constructor tests can
+    # hang under ctest/gtest_discover_tests process orchestration. Exclude all three
+    # from default CTest discovery to prevent the suite from blocking.
     gtest_discover_tests(
         particle_sim_tests
         DISCOVERY_MODE PRE_TEST
@@ -57,8 +57,8 @@ if(WIN32)
             "-UniformGridIndexTest.Constructor_ZeroCellSize_Aborts:UniformGridIndexTest.Constructor_NegativeCellSize_Aborts:UniformGridIndexTest.Constructor_InvertedDomain_Aborts"
     )
 
-    # Manual workaround target for all excluded death tests.
-    # Execute directly via gtest binary rather than through ctest.
+    # Combined workaround target for all three excluded death tests.
+    # Execute directly via gtest binary rather than through ctest to avoid the hang.
     add_custom_target(
         run_uniform_grid_death_tests
         COMMAND
@@ -68,7 +68,7 @@ if(WIN32)
         DEPENDS particle_sim_tests
         WORKING_DIRECTORY $<TARGET_FILE_DIR:particle_sim_tests>
         USES_TERMINAL
-        COMMENT "Running all excluded Windows death tests directly (no ctest)"
+        COMMENT "Running all three excluded Windows death tests directly (no ctest)"
     )
 else()
     gtest_discover_tests(particle_sim_tests)

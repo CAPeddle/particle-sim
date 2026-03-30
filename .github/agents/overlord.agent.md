@@ -99,4 +99,28 @@ CHECKPOINT
 - next_step: <exact next action>
 - next_commands: <literal commands or tool calls>
 - required_artifacts: <files/branches/PRs needed immediately>
+- quality_gate_status: <not-run | pass | fail + reason>
+- open_decisions: <list or "none">
+- resume_prompt: Continue from this checkpoint. Execute next_step first, then continue.
 ```
+
+---
+
+## Workflow Examples
+
+### Simple task (no ExecPlan)
+1. User requests a small fix
+2. Overlord clarifies scope
+3. Developer implements
+4. Code Reviewer validates
+5. Overlord reports done
+
+### Complex task (ExecPlan required)
+1. User requests a new feature
+2. Overlord creates ExecPlan with Testing → Developer → Code Reviewer steps
+3. Testing agent writes RED-phase tests
+4. Developer implements GREEN phase
+5. Developer refactors + validates
+6. Code Reviewer reviews; Developer resolves ERRORs
+7. Overlord verifies quality gate passes
+8. Overlord reports done with summary

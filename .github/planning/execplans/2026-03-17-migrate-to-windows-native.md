@@ -72,7 +72,8 @@ clean Windows build with all tests passing and `particle_sim.exe` launching.
 - [x] `[2026-03-17 13:05] cmake fix + .gitattributes committed` — sm_52 probe fix and line-ending policy in main
 - [x] `[2026-03-17 14:20] Sanitizer CMake option implemented` — `ENABLE_SANITIZERS` works for clang-cl + GCC/Clang
 - [x] `[2026-03-17 15:40] Windows build verified` — CUDA + C++ targets compile and link in `build/` on native Windows
-- [x] `[2026-03-20] Death test hang fixed` — All 3 `UniformGridIndex` death tests excluded from CTest; `run_uniform_grid_death_tests` custom target covers all three
+- [x] `[2026-03-20] Death test hang fixed (partial)` — Only `Constructor_ZeroCellSize_Aborts` excluded in original implementation; `run_uniform_grid_zero_cell_death_test` covered one test
+- [x] `[2026-03-20] Death test hang fix corrected` — All 3 death tests now excluded via colon-separated `TEST_FILTER`; `run_uniform_grid_zero_cell_death_test` renamed to `run_uniform_grid_death_tests` covering all three; `tests/README.md` updated to list all 3 excluded tests and correct target name
 - [x] `[2026-03-20] Docs updated` — DEVELOPMENT.md (full Windows-primary rewrite), build-and-test SKILL.md (Windows commands + ENABLE_SANITIZERS + clang-cl), copilot-instructions.md (Platform table + Build Instructions + CMake 3.29)
 - [x] `[2026-03-20] plan.md updated` — Windows migration added to phase table; environment notes updated; WSL2 archived
 
