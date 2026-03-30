@@ -175,6 +175,24 @@ Include `@brief`, `@param`, `@tparam`, `@return`, `@pre`, `@post`, `@note`, and 
 * **Performance** — avoid hidden allocations; expose profiling hooks.
 * **Deep Modules** — prefer wide, deep interfaces.
 
+### Internal Linkage — Anonymous Namespaces
+
+Free functions used only within a single `.cpp` or `.cu` file **must** be in an anonymous `namespace {}`.
+
+```cpp
+// WRONG — named namespace leaks symbols
+namespace psim::detail
+{
+    static void helper() { ... }  // `static` is also redundant here
+}
+
+// CORRECT
+namespace
+{
+    void helper() { ... }
+}
+```
+
 ### CUDA-Specific Practices
 
 * **Memory Coalescing** — use Struct-of-Arrays layout so warp threads access contiguous memory.
@@ -386,6 +404,21 @@ Prefer agent/coding-agent mode over single-shot chat. Agents can:
 
 Single-shot chat cannot verify correctness — treat its output as a starting draft requiring full review.
 
+### Context-Load Heuristic
+
+Content in `copilot-instructions.md` is loaded into **every** conversation — it must earn its always-on cost. Use this heuristic when deciding where new guidance belongs:
+
+| Content type | Belongs in | Rationale |
+|-------------|-----------|-----------|
+| Coding standards, naming, formatting | `copilot-instructions.md` | Applies to every task |
+| Build commands, project structure | `copilot-instructions.md` | Frequently needed |
+| Reactive/diagnostic workflows | Skill (`.github/skills/`) | Only needed when invoked |
+| Step-by-step procedures | Skill | Loaded on demand, not always |
+| Long reference tables, templates | Skill Layer 3 (`reference/`) | Loaded only when skill explicitly reads them |
+| File-type-specific rules | Instruction (`.github/instructions/`) | Auto-applies by path pattern |
+
+**Rule of thumb:** If the content is only useful in ~10% of conversations, it should be a skill or instruction, not always-on.
+
 ### Available Skills
 
 Skills provide step-by-step workflows for common tasks. Reference them when relevant.
@@ -396,3 +429,6 @@ Skills provide step-by-step workflows for common tasks. Reference them when rele
 | [conventional-commit](./../skills/conventional-commit/SKILL.md) | "commit", "write a commit message" | Conventional Commits 1.0.0 workflow with particle-sim scopes |
 | [create-architectural-decision-record](./../skills/create-architectural-decision-record/SKILL.md) | "create an ADR", "record this decision" | ADR document to `docs/adr/` with full template |
 | [create-technical-spike](./../skills/create-technical-spike/SKILL.md) | "create a spike", "research this" | Time-boxed research doc to `docs/spikes/` |
+| [validate-agent-tools](./../skills/validate-agent-tools/SKILL.md) | "validate tools", "check agent tools" | Validate `.agent.md` tool references against VS Code capabilities |
+| [adopt-template-updates](./../skills/adopt-template-updates/SKILL.md) | "adopt template updates", "sync governance" | Safely adopt Generic template improvements |
+| [review-upstream-sources](./../skills/review-upstream-sources/SKILL.md) | "review upstream", "check governance sources" | Review external governance sources for changes |

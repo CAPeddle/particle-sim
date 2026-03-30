@@ -184,11 +184,4 @@ Zero findings required. All warnings are hard errors (see `.clang-tidy`).
 
 ## Troubleshooting
 
-| Symptom | Likely Cause | Fix |
-|---------|-------------|-----|
-| `compile_commands.json not found` | CMake not run | Run `cmake -B build -G Ninja` |
-| `clang-tidy: command not found` | LLVM tools not in PATH | Install LLVM and add to PATH |
-| `CUDA error: no kernel image` | Wrong SM architecture | Verify `CMAKE_CUDA_ARCHITECTURES=89` in CMakeLists.txt |
-| OpenGL context creation fails | Missing GPU driver | Update NVIDIA drivers |
-| ImGui not displaying | GLFW/OpenGL init failed | Check `glfw_error_callback` output |
-| Sanitizer crash in CUDA code | Sanitizers don't support CUDA | Use `compute-sanitizer` instead |
+Common build, test, and tooling failures with fixes: see [reference/troubleshooting.md](reference/troubleshooting.md).

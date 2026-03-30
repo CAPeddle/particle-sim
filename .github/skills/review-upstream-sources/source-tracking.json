@@ -1,0 +1,151 @@
+{
+  "metadata": {
+    "description": "Tracks last-reviewed state of upstream governance sources for particle-sim. Update on each upstream review cycle.",
+    "schema_version": 1
+  },
+  "sources": {
+    "vscode-agent-skills": {
+      "url": "https://code.visualstudio.com/docs/copilot/customization/agent-skills",
+      "type": "canonical",
+      "last_reviewed": "2026-03-30",
+      "content_hash": null,
+      "version_marker": "Baseline snapshot — adopted from Generic template",
+      "key_sections_at_review": [
+        "Agent Skills vs custom instructions",
+        "Create a skill",
+        "SKILL.md file format",
+        "How Copilot uses skills"
+      ],
+      "notes": "Initial baseline for particle-sim governance"
+    },
+    "vscode-agents-overview": {
+      "url": "https://code.visualstudio.com/docs/copilot/agents/overview",
+      "type": "canonical",
+      "last_reviewed": "2026-03-30",
+      "content_hash": null,
+      "version_marker": "Baseline snapshot — adopted from Generic template",
+      "key_sections_at_review": [
+        "Types of agents",
+        "Which agent should I use?",
+        "Agent sessions list",
+        "Create an agent session",
+        "Hand off a session to another agent"
+      ],
+      "notes": "Initial baseline for particle-sim governance"
+    },
+    "github-prompt-files": {
+      "url": "https://docs.github.com/en/copilot/tutorials/customization-library/prompt-files/your-first-prompt-file",
+      "type": "canonical",
+      "last_reviewed": "2026-03-30",
+      "content_hash": null,
+      "version_marker": "Baseline snapshot — adopted from Generic template",
+      "key_sections_at_review": [
+        "About customizations",
+        "Your first prompt file",
+        "Test it out"
+      ],
+      "notes": "Initial baseline for particle-sim governance"
+    },
+    "awesome-copilot-taxonomy": {
+      "url": "https://awesome-copilot.github.com/learning-hub/what-are-agents-skills-instructions/",
+      "type": "canonical",
+      "last_reviewed": "2026-03-30",
+      "content_hash": null,
+      "version_marker": "Baseline snapshot — adopted from Generic template",
+      "key_sections_at_review": [
+        "Agents",
+        "Skills",
+        "Instructions",
+        "How the artifacts work together"
+      ],
+      "notes": "Initial baseline for particle-sim governance"
+    },
+    "openai-execplans": {
+      "url": "https://developers.openai.com/cookbook/articles/codex_exec_plans",
+      "type": "pattern",
+      "last_reviewed": "2026-03-30",
+      "content_hash": null,
+      "version_marker": "Baseline snapshot — adopted from Generic template",
+      "key_sections_at_review": [
+        "AGENTS.md",
+        "PLANS.md",
+        "Requirements",
+        "Skeleton of a Good ExecPlan"
+      ],
+      "notes": "Initial baseline for particle-sim governance"
+    },
+    "cursor-scaling-agents": {
+      "url": "https://cursor.com/blog/scaling-agents",
+      "type": "pattern",
+      "last_reviewed": "2026-03-30",
+      "content_hash": null,
+      "version_marker": "Baseline snapshot — adopted from Generic template",
+      "key_sections_at_review": [
+        "The limits of a single agent",
+        "Learning to coordinate",
+        "Planners and workers",
+        "What we've learned"
+      ],
+      "notes": "Model selection guidance adopted into agents/README.md"
+    },
+    "compound-engineering": {
+      "url": "https://github.com/EveryInc/compound-engineering-plugin",
+      "type": "pattern",
+      "last_reviewed": "2026-03-30",
+      "content_hash": null,
+      "version_marker": "Baseline snapshot — adopted from Generic template",
+      "key_sections_at_review": [
+        "Install",
+        "Workflow",
+        "Philosophy"
+      ],
+      "github_release_tag": null,
+      "notes": "Plan→Work→Review→Compound philosophy reflected in ExecPlan workflow"
+    },
+    "gsd-get-shit-done": {
+      "url": "https://github.com/gsd-build/get-shit-done",
+      "type": "pattern",
+      "last_reviewed": "2026-03-30",
+      "content_hash": null,
+      "version_marker": "Baseline snapshot — adopted from Generic template",
+      "key_sections_at_review": [
+        "Getting Started",
+        "How It Works",
+        "Configuration",
+        "Security"
+      ],
+      "github_release_tag": null,
+      "notes": "Context engineering patterns informational — no direct adoption"
+    },
+    "context-hub-byod": {
+      "url": "https://github.com/andrewyng/context-hub/blob/main/docs/byod-guide.md",
+      "type": "pattern",
+      "last_reviewed": "2026-03-30",
+      "content_hash": null,
+      "version_marker": "Baseline snapshot — adopted from Generic template",
+      "key_sections_at_review": [
+        "Add your own docs",
+        "Add your own skills",
+        "Point your config at it",
+        "Enterprise use"
+      ],
+      "notes": "Source/distribution layering patterns — informational"
+    },
+    "generic-governance-template": {
+      "url": "file:///C:/projects/zoom_copilot_config/Generic",
+      "type": "canonical",
+      "last_reviewed": "2026-03-30",
+      "content_hash": null,
+      "version_marker": "Full review 2026-03-30 — all files compared",
+      "key_sections_at_review": [
+        "AGENTS.md — investigation-first trigger",
+        "copilot-instructions.md — anonymous namespace guidance",
+        "overlord.agent.md — checkpoint format with quality_gate_status",
+        "agents/README.md — skills table and model selection",
+        "skills/ — review-upstream-sources, adopt-template-updates, validate-agent-tools",
+        "PLANS.md — investigation-first ExecPlan trigger"
+      ],
+      "notes": "Full adoption review completed. Adopted: 3 new skills, investigation-first trigger, anonymous namespace guidance, Overlord checkpoint/workflow enhancements, agent README skills table + model guidance, PLANS.md investigation trigger. Discarded: naming conventions (camelCase), docstring format, directory layout, PIMPL, 4-sanitizer requirement, Conan/CMake4, #ifndef guards — all intentional particle-sim customizations."
+    }
+  }
+}

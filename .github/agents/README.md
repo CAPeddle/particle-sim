@@ -71,6 +71,79 @@ Overlord (orchestrator)
 
 ---
 
+## Skills
+
+Skills are procedural guides invoked by agents. They are not agents — they have no tools and produce no output unless an agent reads and applies them.
+
+| Skill | Purpose |
+|-------|---------|
+| [`build-and-test`](../skills/build-and-test/SKILL.md) | Step-by-step build, dependency setup, and test execution |
+| [`conventional-commit`](../skills/conventional-commit/SKILL.md) | Conventional Commits 1.0.0 workflow with particle-sim scopes |
+| [`create-architectural-decision-record`](../skills/create-architectural-decision-record/SKILL.md) | ADR document to `docs/adr/` with full template |
+| [`create-technical-spike`](../skills/create-technical-spike/SKILL.md) | Time-boxed research doc to `docs/spikes/` |
+| [`validate-agent-tools`](../skills/validate-agent-tools/SKILL.md) | Validate and update tools listed in `.agent.md` frontmatter against current VS Code/Copilot capabilities |
+| [`adopt-template-updates`](../skills/adopt-template-updates/SKILL.md) | Safely adopt newer Generic template governance updates into particle-sim |
+| [`review-upstream-sources`](../skills/review-upstream-sources/SKILL.md) | Review upstream governance sources for changes, update local governance |
+
+---
+
+## Skill Authoring Standard — "Point Don't Dump"
+
+Skills follow a **layered** structure aligned with VS Code's [progressive loading model](https://code.visualstudio.com/docs/copilot/customization/agent-skills). The principle is **point, don't dump**: give the agent layers of increasing detail, letting it pull what it needs rather than flooding context on every invocation.
+
+### The Three Layers
+
+| Layer | Location | Content | When Loaded |
+|-------|----------|---------|-------------|
+| **1 — Description** | YAML frontmatter (`name` + `description`) | What the skill does and when to use it | **Always** — drives skill discovery; never consumes conversation context |
+| **2 — Process** | SKILL.md body | Decision tree: steps, decision points, and **pointers** to Layer 3 resources | **On invocation** — loaded into context when the skill matches or is `/`-invoked |
+| **3 — Reference & Scripts** | Other files in the skill directory (`.md`, `.ps1`, etc.) | Lookup tables, runnable scripts, templates, worked examples | **On demand** — accessed only when the Layer 2 process explicitly references them |
+
+### Layer 2 Guidelines
+
+The SKILL.md body should read like a **decision tree**, not a reference manual:
+
+- **Do:** Name each step, state its purpose, describe the decision or action, and point to a Layer 3 file for the details.
+- **Don't:** Inline long scripts, reference tables, or templates. Extract to separate files and reference with a relative link.
+- **One-liners are fine inline.** Only extract when a code block exceeds ~5 lines or a table exceeds ~5 rows.
+- **Slim summaries preferred.** For large Layer 3 files, include a 2–3 line summary of what the file contains and when to read it, then link.
+
+### Layer 3 Guidelines
+
+- **Runnable scripts** (`.ps1`, `.py`) should be parameterised and directly executable.
+- **Reference files** (`.md`) should be self-contained — readable without the parent SKILL.md.
+- **Avoid duplication.** Point to canonical sources rather than copying. A slim summary in the skill directory is acceptable when the canonical source is large.
+
+### Example Structure
+
+```
+.github/skills/my-skill/
+├── SKILL.md                  # Layer 2 — decision tree with pointers
+├── scripts/
+│   └── validate.ps1          # Layer 3 — runnable script
+└── reference/
+    └── known-issues.md       # Layer 3 — lookup table
+```
+
+> **Review gate:** The `review-upstream-sources` skill includes skill-structure compliance as a review criterion.
+
+---
+
+## Model Selection Guidance
+
+*Based on Cursor "Scaling Agents" (Jan 2026) findings.*
+
+| Task type | Recommended model |
+|-----------|------------------|
+| Planning, architecture, orchestration | Claude Opus / GPT-5.2 — sustained focus, low drift |
+| Focused implementation | Claude Sonnet / GPT-5.1-Codex — fast, context-efficient |
+| Code review | Claude Sonnet — nuanced reasoning |
+| Short targeted edits | Any fast model |
+
+Use the best model for the role, not one universal model. Planner agents (Overlord) benefit most from the highest-quality models.
+
+---
+
 ## particle-sim Specific
 
 ### Technology Stack
