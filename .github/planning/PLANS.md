@@ -8,17 +8,18 @@ An ExecPlan is a self-contained implementation plan that an agent or developer c
 
 ## When an ExecPlan is Required
 
-Create an ExecPlan **before any work begins** — including investigation, evaluation, or research steps that precede implementation — when work includes any of:
+**Default: use an ExecPlan.** Create an ExecPlan **before any work begins** — including investigation, evaluation, or research steps that precede implementation — when work includes any of:
 
 - Multi-file feature work or significant refactor
 - Cross-module changes with non-trivial dependency impact
 - Non-trivial bug fixes with unclear root cause
 - Work requiring multiple milestones, prototypes, or rollback planning
 - **Investigation-first tasks** — tasks where the first step is to explore, evaluate options, or compile findings before implementing. The ExecPlan must exist before the investigation begins, not only before the implementation phase.
+- **Governance or documentation work** spanning multiple files
 
 > **Common failure mode:** A prompt phrased as "investigate first, then implement" may be treated as not requiring an ExecPlan until implementation starts. This is incorrect — any multi-step task (including one that begins with research or evaluation) requires an ExecPlan before the first step.
 
-For small, single-file, low-risk fixes, an ExecPlan is optional.
+An ExecPlan may be skipped **only** for truly trivial, single-step operations (e.g., fixing a typo in one file, committing already-staged changes). When in doubt, create the plan.
 
 ---
 
@@ -68,8 +69,21 @@ The `Progress` list must contain these four checkpoints in order:
 2. `GREEN implementation completed` — code written to pass the tests
 3. `REFACTOR + validation completed`
 4. `Code review — zero ERRORs` — code-reviewer agent (or human) sign-off
+5. `Compound — governance updated` — learnings from Outcomes & Retrospective applied to governance files (or "no updates needed" recorded)
 
-A plan missing any of these four checkpoints is incomplete regardless of build/test status.
+A plan missing any of these checkpoints is incomplete regardless of build/test status.
+
+### 5. Compound — Governance Updated with Learnings
+
+After filling `Outcomes & Retrospective`, the ExecPlan is not complete until learnings are **applied** to governance files:
+
+- **Patterns to promote** → add to `copilot-instructions.md`, relevant agent files, or skills
+- **Reusable findings** → preserve in `.github/planning/investigations/` or skill reference files
+- **New anti-patterns** → document as warnings in `copilot-instructions.md` or relevant instructions
+
+If the retrospective has no actionable findings, record "No governance updates needed" in `Progress` and proceed.
+
+> **Rationale (Compound Engineering):** Adopted from [EveryInc's compound-engineering plugin](https://github.com/EveryInc/compound-engineering-plugin). Each completed Plan→Work→Review cycle must end with a **Compound** step that codifies learnings for future cycles. Without this step, the same mistakes are repeated and the same patterns are rediscovered.
 
 ---
 
@@ -100,6 +114,8 @@ At completion, update `Outcomes & Retrospective` with:
 - **Patterns to promote** — coding, testing, or workflow patterns worth adding to `copilot-instructions.md`
 - **Reusable findings** — research conclusions worth preserving in `.github/planning/investigations/`
 - **New anti-patterns** — failure modes, wrong approaches, or gotchas to document as warnings
+
+**Then execute the Compound step:** apply those findings to the relevant governance files. The plan is not complete until learnings are propagated. See "Mandatory Progress Checkpoints" above.
 
 If the plan used scratch files in `build/_tmp/`, the final `Progress` entry must record their removal:
 ```bash

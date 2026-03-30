@@ -123,4 +123,5 @@ CHECKPOINT
 5. Developer refactors + validates
 6. Code Reviewer reviews; Developer resolves ERRORs
 7. Overlord verifies quality gate passes
-8. Overlord reports done with summary
+8. **Compound step:** Complete `Outcomes & Retrospective` in the ExecPlan. Apply learnings — update `copilot-instructions.md`, skills, agent files, or planning docs with any patterns to promote, reusable findings, or new anti-patterns discovered during the work.
+9. Overlord reports done with summary

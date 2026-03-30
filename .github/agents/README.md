@@ -165,3 +165,22 @@ Use the best model for the role, not one universal model. Planner agents (Overlo
 - clang-format on `.cpp`, `.hpp`, `.cu`, `.cuh`
 - clang-tidy on `.cpp`, `.hpp` only (CUDA limited support)
 - ASan + UBSan for CPU code (CUDA incompatible with MSan/TSan)
+
+---
+
+## Influences & Sources
+
+The governance model for this repository draws on the following external sources. Each entry documents what was adopted and where it landed.
+
+| Source | Key Contribution | Where It Landed |
+|--------|-----------------|-----------------|
+| [EveryInc: Compound Engineering](https://github.com/EveryInc/compound-engineering-plugin) | Plan→Work→Review→**Compound** lifecycle; mandatory code review; learning capture | PLANS.md mandatory Compound checkpoint; Overlord workflow step 8; ExecPlan template Step 5 |
+| [OpenAI Cookbook: ExecPlans](https://developers.openai.com/cookbook/articles/codex_exec_plans) | Self-contained plans; define every term; observable outcomes; idempotence | PLANS.md quality bar; ExecPlan template structure |
+| [Cursor: Scaling Agents](https://cursor.com/blog/scaling-agents) | Planner/worker hierarchy; model selection by role; prompt quality over architecture | Overlord planner/worker pattern; Model Selection Guidance table |
+| [GitHub Copilot Docs](https://docs.github.com/en/copilot) | Agent skills spec; YAML frontmatter; path-specific instructions; agentStop hooks | Skills, instructions, hooks, agent file format |
+| [Get Shit Done (GSD)](https://github.com/gsd-build/get-shit-done) | Context degradation thresholds; ExecPlan as session-handoff artifact; task atomicity | Overlord context pressure tracking; PLANS.md task sizing section |
+| [Jason Turner, CppCon 2025](https://www.youtube.com/watch?v=xCuRUjxT5L8) | C++ LLM failure modes; prompt discipline; output review checklist | copilot-instructions.md AI Tool Usage Guidelines |
+| [github/awesome-copilot](https://github.com/github/awesome-copilot) | Agent/skill/hook/instruction taxonomy | Overall governance structure |
+| Generic Governance Template | Starter kit for all governance files; Point Don't Dump skill authoring standard | All `.github/` governance files; agents/README Skill Authoring Standard section |
+
+Full source registry and tracking state: see [`review-upstream-sources/reference/seed-sources.md`](../skills/review-upstream-sources/reference/seed-sources.md) and [`source-tracking.json`](../skills/review-upstream-sources/source-tracking.json).

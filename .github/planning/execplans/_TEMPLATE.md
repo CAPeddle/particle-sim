@@ -27,6 +27,7 @@ Explain what users or the system gains after this change and how to observe it w
 - [ ] (YYYY-MM-DD HH:MM UTC) GREEN implementation completed — all RED tests now pass.
 - [ ] (YYYY-MM-DD HH:MM UTC) REFACTOR + validation completed.
 - [ ] (YYYY-MM-DD HH:MM UTC) Code review — `code-reviewer` agent (or human) sign-off, zero ERRORs.
+- [ ] (YYYY-MM-DD HH:MM UTC) Compound — `Outcomes & Retrospective` filled; learnings applied to governance files (or "no updates needed").
 - [ ] (YYYY-MM-DD HH:MM UTC) Scratch files removed — `rm -rf build/_tmp` *(skip if no scratch files were created)*.
 
 ---
@@ -113,6 +114,15 @@ Each step specifies the delegated agent, exact commands, working directory, and 
 - **Action:** Full review against `copilot-instructions.md`, C++ Core Guidelines, and sanitizer compliance.
 - **Depends on:** Step 3
 - **Expected output:** Review report with zero ERRORs.
+
+### Step 5 — Compound
+- **Agent:** `overlord` (or current agent)
+- **Action:** Complete `Outcomes & Retrospective`. For each finding:
+  - **Patterns to promote** → add to `copilot-instructions.md` or relevant skill/agent files
+  - **Reusable findings** → preserve in `.github/planning/investigations/` or skill reference files
+  - **New anti-patterns** → document as warnings in governance files
+- **Depends on:** Step 4
+- **Expected output:** Governance files updated (or "no updates needed" recorded in Progress).
 
 ---
 

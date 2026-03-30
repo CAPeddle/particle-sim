@@ -404,6 +404,12 @@ Prefer agent/coding-agent mode over single-shot chat. Agents can:
 
 Single-shot chat cannot verify correctness — treat its output as a starting draft requiring full review.
 
+### ExecPlans and Compound Engineering
+
+**Default to using an ExecPlan** for all non-trivial work. See `AGENTS.md` for trigger policy and `.github/planning/PLANS.md` for the full standard.
+
+Every completed ExecPlan must end with a **Compound step**: review `Outcomes & Retrospective` and apply learnings to governance files (`copilot-instructions.md`, skills, agents). This closes the feedback loop — completed work makes the system smarter, not just bigger.
+
 ### Context-Load Heuristic
 
 Content in `copilot-instructions.md` is loaded into **every** conversation — it must earn its always-on cost. Use this heuristic when deciding where new guidance belongs:

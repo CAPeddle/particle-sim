@@ -19,17 +19,22 @@ An ExecPlan **must** be created before implementation begins, maintained as a li
 
 ### When an ExecPlan is required
 
-Create an ExecPlan **before any work begins** — including investigation, evaluation, or research steps that precede implementation — when any of the following applies:
+**Default: use an ExecPlan.** Create an ExecPlan **before any work begins** — including investigation, evaluation, or research steps that precede implementation — when any of the following applies:
 
 - Multi-file feature work or significant refactor
 - Cross-module changes with non-trivial dependency impact
 - Non-trivial bug fixes with unclear root cause
 - Any work requiring multiple milestones, prototypes, or rollback planning
 - **Investigation-first tasks** — tasks where the first step is to explore, evaluate options, or compile findings before implementing. The ExecPlan must exist before the investigation begins, not only before the implementation phase.
+- **Governance or documentation work** spanning multiple files
 
 > **Common failure mode:** A prompt phrased as "investigate first, then implement" may be treated as not requiring an ExecPlan until implementation starts. This is incorrect — any multi-step task (including one that begins with research or evaluation) requires an ExecPlan before the first step.
 
-For small, single-file, low-risk fixes, an ExecPlan is optional.
+An ExecPlan may be skipped **only** for truly trivial, single-step operations (e.g., fixing a typo in one file, committing already-staged changes). When in doubt, create the plan — the overhead is low and the traceability is valuable.
+
+### Compound step
+
+Every completed ExecPlan must end with a **Compound step**: review `Outcomes & Retrospective` and apply learnings to governance files. This is how the project gets smarter over time. See `.github/planning/PLANS.md` for enforcement details.
 
 For detailed guidance on ExecPlan structure and requirements, see [.github/planning/PLANS.md](.github/planning/PLANS.md).
 
